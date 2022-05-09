@@ -1,0 +1,35 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class PersonDao
+class IDCard
+class Person
+class Department
+class PersonServiceBean {
+    - personDao: PersonDao
+    + save(person: Person): void
+    + getIDCard(personId: Integer): IDCard
+    + modify(): void
+}
+
+PersonServiceBean --> PersonDao
+PersonServiceBean --> IDCard
+PersonServiceBean --> Person
+PersonServiceBean --> Department
+
+note left of PersonServiceBean::personDao
+    成员属性
+end note
+
+note right of PersonServiceBean::save
+    方法参数
+end note
+
+note right of PersonServiceBean::getIDCard
+    方法返回值
+end note
+
+note left of PersonServiceBean::modify
+    方法中使用到了 Department
+end note
+@enduml

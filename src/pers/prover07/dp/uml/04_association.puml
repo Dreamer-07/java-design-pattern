@@ -1,0 +1,28 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class Person {
+    -card: IDCard
+}
+class IDCard {}
+
+Person "1" --> "1" IDCard
+note right on link #blue
+    单向一对一关联关系
+end note
+
+class Person2 {
+    - card: IDCard2
+}
+
+class IDCard2 {
+    - person: Person2
+}
+
+Person2 "1" -- "1" IDCard2
+note right on link #blue
+    双向一对一关联关系
+end note
+
+
+@enduml

@@ -896,3 +896,199 @@ class SchoolManager {
 2. 针对接口编程，而不是针对实现编程
 3. 为了交互对象之间的**松耦合设计**而努力
 
+## UML 类图
+
+> 基本介绍
+
+- 统一建模语言，是一种用户软件系统分析和设计的语言工具，用户帮助软件开发人员进行思考和记录思路的结果
+- UML 本身是一套符号的规定，就像数学符号和化学符号一样，这些符号用于描述软件模型中的各个元素和他们之间的关系(类/接口/实现/泛化等等)
+- 使用 UML 来建模，常用工具有 Rational Rose，也可以使用一些插件来建模
+
+> 使用
+
+- 这里使用 **PlantUML** 进行 UML 建模，可以参考：https://plantuml.com/zh/class-diagram#6e0d446ea2c5bf82
+
+> 分类
+
+- 用例图(use case)
+- 静态结构图：**类图**，对象图，包图，组件图，部署图
+- 动态行为图：交互图(时序图/协作图)，状态图，活动图
+
+> 说明
+
+- 用于描述系统中类(对象)本身的组成和其他类(对象)之间的各种静态关系
+- 类之间的关系：**依赖/泛化(继承)/实现/关联/聚合/组合**
+
+> 类的依赖关系：只要在类中使用到了对方
+
+ ![image-20220509205654034](README.assets/image-20220509205654034.png)
+
+比较常见的几种情况：
+
+- 类的成员属性
+- 方法的返回类型
+- 方法接收的参数类型
+- 方法中使用到的(局部变量)
+
+```puml
+@startuml
+'https://plantuml.com/class-diagram
+
+class PersonDao
+class IDCard
+class Person
+class Department
+class PersonServiceBean {
+    - personDao: PersonDao
+    + save(person: Person): void
+    + getIDCard(personId: Integer): IDCard
+    + modify(): void
+}
+
+PersonServiceBean --> PersonDao
+PersonServiceBean --> IDCard
+PersonServiceBean --> Person
+PersonServiceBean --> Department
+
+note left of PersonServiceBean::personDao
+    成员属性
+end note
+ 
+note right of PersonServiceBean::save
+    方法参数
+end note
+
+note right of PersonServiceBean::getIDCard
+    方法返回值
+end note
+
+note left of PersonServiceBean::modify
+    方法中使用到了 Department
+end note
+@enduml
+```
+
+> 类的泛化关系：实际上就是继承关系，是**依赖关系的特例**
+
+ ![image-20220509210434265](README.assets/image-20220509210434265.png)
+
+如果A类继承了B类，那么A类与B类就存在泛化关系
+
+```puml
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class DaoSupport {
+    + save(entity: Object): void
+    + delete(id: Object): void
+}
+class PersonServiceBean
+
+DaoSupport <|-- PersonServiceBean
+
+@enduml
+```
+
+> 类的实现关系：也是**依赖关系的特例**
+
+ ![image-20220509211020834](README.assets/image-20220509211020834.png)
+
+```puml
+@startuml
+'https://plantuml.com/class-diagram
+
+interface PersonService {
+    + delete(id: Integer): void
+}
+class PersonServiceBean {
+    + delete(id: Integer): void
+}
+PersonService <|.. PersonServiceBean
+
+@enduml
+```
+
+> 类的关联关系：类与类之间的联系特征，也是**依赖关系的特例**
+
+- 关联具有导航性(单向/双向)
+- 关联具有多重性("1"表示有且只有一个;"0"表示0个或多个;"0,1"表示0/1个;"n...m"表示n到m个都可以;"m...*"表示最少m个等等)
+
+![image-20220509214609663](README.assets/image-20220509214609663.png)
+
+```puml
+@startuml
+'https://plantuml.com/class-diagram
+
+class Person {
+    -card: IDCard
+}
+class IDCard {}
+
+Person "1" --> "1" IDCard
+note right on link #blue
+    单向一对一关联关系
+end note
+
+class Person2 {
+    - card: IDCard2
+}
+
+class IDCard2 {
+    - person: Person2
+}
+
+Person2 "1" -- "1" IDCard2
+note right on link #blue
+    双向一对一关联关系
+end note
+
+
+@enduml
+```
+
+> 类的聚合关系：表示的是整体和部分的关系，但**整体和部分可以分开，聚合关系是关联关系的特例**，所以它也具有关联的**导航性和多重性**
+
+ ![image-20220509223858183](README.assets/image-20220509223858183.png)
+
+```pnml
+@startuml
+'https://plantuml.com/class-diagram
+
+class Mouse
+class Monitor
+class Computer {
+    - mouse: Mouse
+    - monitor: Monitor
+    + setMouse(mouse: Mouse): void
+    + setMonitor(monitor: Monitor): void
+}
+note left: 属性的初始化和对象的初始化时机不同,\n所以是聚合关系
+
+Computer o-- Mouse
+Computer o-- Monitor
+
+@enduml
+```
+
+> 类的组合关系：也是整体与部分的关系&关联关系的特例，但是**整体和部分不可以分开**
+
+ ![image-20220509224356020](README.assets/image-20220509224356020.png)
+
+```puml
+@startuml
+'https://plantuml.com/class-diagram
+
+class Head
+class IDCard
+class Person {
+    - idCard: IDCard
+    - head: Head = new Head()
+}
+note left: 当属性和对象的初始化时机相同时表示\n整体与部分不可分割
+
+Person o-- IDCard
+Person *-- Head
+@enduml
+```
+
+特殊情况：初始化不同，但在销毁当前对象时也要**级联删除**的成员对象属性，也是组合关系(例如再删除 Person 时将对应的 IDCard 也进行删除)
