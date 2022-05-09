@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>pers.prover07.dp.principle.interfacesegregation.up.Interface1</OriginalElement>
+  <nodes>
+    <node x="46.5" y="-91.0">pers.prover07.dp.principle.interfacesegregation.up.Interface1</node>
+    <node x="-266.25" y="-104.0">pers.prover07.dp.principle.interfacesegregation.up.Interface3</node>
+    <node x="359.25" y="-104.0">pers.prover07.dp.principle.interfacesegregation.up.Interface2</node>
+    <node x="-332.0" y="48.0">pers.prover07.dp.principle.interfacesegregation.up.D</node>
+    <node x="-117.0" y="48.0">pers.prover07.dp.principle.interfacesegregation.up.C</node>
+    <node x="425.0" y="48.0">pers.prover07.dp.principle.interfacesegregation.up.B</node>
+    <node x="154.0" y="48.0">pers.prover07.dp.principle.interfacesegregation.up.A</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="pers.prover07.dp.principle.interfacesegregation.up.C" target="pers.prover07.dp.principle.interfacesegregation.up.Interface1">
+      <point x="62.75" y="-59.0" />
+      <point x="71.25" y="28.0" />
+      <point x="119.625" y="28.0" />
+      <point x="-24.375" y="33.0" />
+    </edge>
+    <edge source="pers.prover07.dp.principle.interfacesegregation.up.D" target="pers.prover07.dp.principle.interfacesegregation.up.Interface1">
+      <point x="48.75" y="-59.0" />
+      <point x="-185.75" y="18.0" />
+      <point x="70.875" y="18.0" />
+      <point x="-73.125" y="33.0" />
+    </edge>
+    <edge source="pers.prover07.dp.principle.interfacesegregation.up.A" target="pers.prover07.dp.principle.interfacesegregation.up.Interface2">
+      <point x="62.75" y="-59.0" />
+      <point x="342.25" y="28.0" />
+      <point x="408.0" y="28.0" />
+      <point x="-48.75" y="46.0" />
+    </edge>
+    <edge source="pers.prover07.dp.principle.interfacesegregation.up.B" target="pers.prover07.dp.principle.interfacesegregation.up.Interface2">
+      <point x="48.75" y="-59.0" />
+      <point x="571.25" y="28.0" />
+      <point x="505.5" y="28.0" />
+      <point x="48.75" y="46.0" />
+    </edge>
+    <edge source="pers.prover07.dp.principle.interfacesegregation.up.C" target="pers.prover07.dp.principle.interfacesegregation.up.Interface3">
+      <point x="-62.75" y="-59.0" />
+      <point x="-54.25" y="8.0" />
+      <point x="-120.0" y="8.0" />
+      <point x="48.75" y="46.0" />
+    </edge>
+    <edge source="pers.prover07.dp.principle.interfacesegregation.up.A" target="pers.prover07.dp.principle.interfacesegregation.up.Interface1">
+      <point x="-62.75" y="-59.0" />
+      <point x="216.75" y="28.0" />
+      <point x="168.375" y="28.0" />
+      <point x="24.375" y="33.0" />
+    </edge>
+    <edge source="pers.prover07.dp.principle.interfacesegregation.up.D" target="pers.prover07.dp.principle.interfacesegregation.up.Interface3">
+      <point x="-48.75" y="-59.0" />
+      <point x="-283.25" y="28.0" />
+      <point x="-217.5" y="28.0" />
+      <point x="-48.75" y="46.0" />
+    </edge>
+    <edge source="pers.prover07.dp.principle.interfacesegregation.up.B" target="pers.prover07.dp.principle.interfacesegregation.up.Interface1">
+      <point x="-48.75" y="-59.0" />
+      <point x="473.75" y="18.0" />
+      <point x="217.125" y="18.0" />
+      <point x="73.125" y="33.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="269.5" y="33.0" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Fields</Category>
+    <Category>Constructors</Category>
+    <Category>Methods</Category>
+    <Category>Properties</Category>
+    <Category>Inner Classes</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+
