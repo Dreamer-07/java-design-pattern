@@ -1,0 +1,17 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class Mouse
+class Monitor
+class Computer {
+    - mouse: Mouse
+    - monitor: Monitor
+    + setMouse(mouse: Mouse): void
+    + setMonitor(monitor: Monitor): void
+}
+note left: 属性的初始化和对象的初始化时机不同,\n所以是聚合关系
+
+Computer o-- Mouse
+Computer o-- Monitor
+
+@enduml

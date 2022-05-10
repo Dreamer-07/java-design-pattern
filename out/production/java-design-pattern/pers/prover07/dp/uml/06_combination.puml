@@ -1,0 +1,14 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class Head
+class IDCard
+class Person {
+    - idCard: IDCard
+    - head: Head = new Head()
+}
+note left: 当属性和对象的初始化时机相同时表示\n整体与部分不可分割
+
+Person o-- IDCard
+Person *-- Head
+@enduml

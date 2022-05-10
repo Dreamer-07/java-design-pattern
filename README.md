@@ -3,7 +3,8 @@
 ## 简介
 
 - 软件工程中，设计模式是对**软件设计中普遍存在(反复出现)的问题**，所提出的**解决方案**
-- 使用设计模式，可以提高项目的**可扩展性，可维护性，规范性**
+- 是程序员在面对同类软件工程设计问题所总结出来的有用的经验，**模式不是代码，而是某类问题的通用解决方案**
+- 使用设计模式，可以提高项目的**可扩展性，可维护性，规范性，并降低软件的复杂度**
 - 设计模式的目的
   1. **代码重用性**: 相同功能的代码，不用多次编写
   2. **可读性**：编程规范性，便于团队开发
@@ -1092,3 +1093,461 @@ Person *-- Head
 ```
 
 特殊情况：初始化不同，但在销毁当前对象时也要**级联删除**的成员对象属性，也是组合关系(例如再删除 Person 时将对应的 IDCard 也进行删除)
+
+## 创建型模式
+
+### 单例模式
+
+#### 简介
+
+采取一定的方法，保证整个系统中某个类只**存在一个对象实例**，并且该类提供一个可以获取去对象实例的方法(静态方法)
+
+ ![image-20220509230833163](README.assets/image-20220509230833163.png)
+
+#### 实现方式
+
+##### 饿汉式
+
+> 静态常量
+
+步骤：
+
+1. 构造器私有化(防止外部 new)
+2. 在内部创建类的对象
+3. 对外暴漏一个静态的公共方法，可以用来获取创建的对象
+
+代码：
+
+```java
+public class Demo1 {
+
+    public static void main(String[] args) {
+        Singleton01 instance = Singleton01.getInstance();
+        Singleton01 instance2 = Singleton01.getInstance();
+        System.out.println(instance == instance2);
+    }
+
+}
+
+class Singleton01 {
+
+    /**
+     * 1. 私有化构造器
+     */
+    private Singleton01() {
+
+    }
+
+    /**
+     * 2. 在类的内部创建对象实例
+     */
+    private final static Singleton01 INSTANCE = new Singleton01();
+
+    /**
+     * 3. 对外暴漏方法，返回该类的实例
+     * @return
+     */
+    public static Singleton01 getInstance() {
+        return INSTANCE;
+    }
+
+}
+```
+
+优缺点说明：
+
+- 优点：
+  - 写法简单
+  - 在类加载时完成了实例化，避免了线程同步问题
+- 缺点：
+  - 在类加载的时候完成了实例化，没有达到 Lazy Loading 的效果
+  - 加载后如果长时间不使用，会造成内存的浪费(进行类加载clasloader的可能是其他方法，不一定是 **getInstance**)
+
+- 总结：能用，但可能会造成内存浪费
+
+> 静态代码块
+
+代码：
+
+```java
+public class Demo2 {
+
+    public static void main(String[] args) {
+        Singleton02 instance = Singleton02.getInstance();
+        Singleton02 instance2 = Singleton02.getInstance();
+        System.out.println(instance == instance2);
+    }
+
+}
+
+class Singleton02 {
+
+    /**
+     * 1. 私有化构造器
+     */
+    private Singleton02() {
+
+    }
+
+    /**
+     * 2. 定义实例的变量
+     */
+    private final static Singleton02 INSTANCE;
+
+    static {
+        // 3. 在代码块中完成对实例的初始化
+        INSTANCE = new Singleton02();
+    }
+
+    /**
+     * 4. 对外暴漏方法，返回该类的实例
+     * @return
+     */
+    public static Singleton02 getInstance() {
+        return INSTANCE;
+    }
+
+}
+```
+
+优缺点说明：
+
+- 这种方式和[**静态常量**]差不多,只不过将类实例化的过程放在了静态代码块中；在类加载时，执行静态代码块中的方法，初始化类的实例，优缺点都一样
+- 结论：能用，但可能会造成内存浪费
+
+##### 懒汉式
+
+> 线程不安全、
+
+代码：
+
+```java
+public class Demo3 {
+
+    public static void main(String[] args) {
+        Singleton03 instance1 = Singleton03.getInstance();
+        Singleton03 instance2 = Singleton03.getInstance();
+        System.out.println(instance1 == instance2);
+    }
+
+}
+
+class Singleton03 {
+    private Singleton03() {
+
+    }
+
+    private static Singleton03 singleton03;
+
+    /**
+     * 懒汉式：只有在调用获取实例的方法时才创建实例
+     * @return
+     */
+    public static Singleton03 getInstance() {
+        if (singleton03 == null) {
+            singleton03 = new Singleton03();
+        }
+        return singleton03;
+    }
+}
+```
+
+优缺点说明：
+
+- 优点：起到了 Lazy Loading 的效果
+- 缺点：只能在单线程下使用(在多线程情况下，一个线程进入到了 `if (singleton03 == null)` 判断语句块，还未来得及执行下一步，另一个线程也通过了该判断语句，**这时便会产生多个实例**)
+- 结论：在实际开发中，不要使用这种方式!
+
+> 线程安全，同步方法
+
+代码：
+
+```java
+public class Demo4 {
+
+    public static void main(String[] args) {
+        Singleton4 instance = Singleton4.getInstance();
+        Singleton4 instance2 = Singleton4.getInstance();
+        System.out.println(instance == instance2);
+
+    }
+
+}
+
+class Singleton4 {
+    private Singleton4() {
+
+    }
+
+    private static Singleton4 singleton4;
+
+    /**
+     * 使用 synchronized 解决多线程问题
+     * @return
+     */
+    public static synchronized Singleton4 getInstance() {
+        if (singleton4 == null) {
+            singleton4 = new Singleton4();
+        }
+        return singleton4;
+    }
+}
+```
+
+优缺点说明：
+
+- 优点：完成了 Lazy Loading + 解决了多线程问题
+- 缺点：效率太低了，其实只有保证执行一次实例化代码就好了，再后面使用时直接 return 即可，要是后面使用时还 synchronized 那也太慢了hhh
+- 结论：在实际开发中，不推荐使用这种方式
+
+> 线程不安全，同步代码块
+
+代码:
+
+```java
+/**
+ * 单例模式 - 懒汉式 - 同步方法，线程不安全
+ * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+ * @version 1.0
+ * @date 2022/5/10 11:35
+ */
+public class Demo5 {
+
+    public static void main(String[] args) {
+        Singleton5 instance = Singleton5.getInstance();
+        Singleton5 instance1 = Singleton5.getInstance();
+        System.out.println(instance == instance1);
+    }
+
+}
+
+class Singleton5 {
+    private Singleton5() {
+
+    }
+
+    private static Singleton5 singleton5;
+
+    /**
+     * 使用同步方法提高效率
+     * @return
+     */
+    public static Singleton5 getInstance() {
+        if (singleton5 == null) {
+            synchronized (Singleton5.class) {
+                singleton5 = new Singleton5();
+            }
+        }
+        return singleton5;
+    }
+}
+```
+
+优缺点说明：
+
+- 这种方式主要针对 [懒汉式-同步代码块] 中的效率太低的问题所提出的，本身在进行 `if(s5 == null)` 时还是有可能会产生线程安全问题
+- 结论：在实际开发中，不能使用这种方式
+
+##### 双重检查(double-check)
+
+代码：
+
+```java
+/**
+ * 单例模式 - 双重检查
+ * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+ * @version 1.0
+ * @date 2022/5/10 12:06
+ */
+public class Demo6 {
+
+    public static void main(String[] args) {
+        Singleton6 instance = Singleton6.getInstance();
+        Singleton6 instance1 = Singleton6.getInstance();
+        System.out.println(instance == instance1);
+    }
+
+}
+
+class Singleton6 {
+    private Singleton6() {
+
+    }
+
+    /**
+     * 使用 volatile 保证可见性和禁止指令重排
+     */
+    private static volatile Singleton6 singleton6;
+
+    /**
+     * 使用两个 if + 同步代码块 解决 Lazy Loading + 线程安全 问题
+     * @return
+     */
+    public static Singleton6 getInstance() {
+        if (singleton6 == null) {
+            synchronized (Singleton6.class) {
+                if (singleton6 == null) {
+                    singleton6 = new Singleton6();
+                }
+            }
+        }
+        return singleton6;
+    }
+}
+```
+
+结论：
+
+1. `double-check` 概念是多线程开发中经常使用的，当我们使用两次 `if(s6 == null)` 保证线程安全 
+2. 线程安全，Lazy Loading, 效率较高
+3. 结论：在实际开发中，**推荐使用**
+
+**为什么要使用 volatile**？
+
+1. 当我们创建实例时 `singleton6 = new Singleton6();`这一行可以分解为三行代码(JVM 内部执行)
+
+   ```java
+   memory=allocate();        //1:分配对象的内存空间
+   ctorInstance(memory);     //2:初始化对象
+   instance = memory;          //3:设置instance指向刚分配的内存地址
+   ```
+
+2. 在上面三行代码执行过程中，可能会导致重排序，第2和3行的执行顺序可能会被重排序
+
+   ```java
+   memory=allocate();        //1:分配对象的内存空间
+   instance = memory;        //3:设置instance指向刚分配的内存地址
+                             //注意，此时对象还没有被初始化！
+   ctorInstance(memory);     //2:初始化对象
+   ```
+
+##### 静态内部类
+
+代码：
+
+```java
+/**
+ * 单例模式 - 静态内部类
+ * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+ * @version 1.0
+ * @date 2022/5/10 22:17
+ */
+public class Demo7 {
+
+    public static void main(String[] args) {
+        Singleton7 instance = Singleton7.getInstance();
+        Singleton7 instance2 = Singleton7.getInstance();
+        System.out.println(instance == instance2);
+    }
+
+}
+
+class Singleton7 {
+    private Singleton7() {}
+
+    /**
+     * 当类加载时并不会加载对应的静态内部类
+     */
+    private static class Singleton7Instance{
+        private static final Singleton7 SINGLETON7 = new Singleton7();
+    }
+
+    /**
+     * Java 在进行 Classloader 时线程是安全的
+     * @return
+     */
+    public static Singleton7 getInstance() {
+        return Singleton7Instance.SINGLETON7;
+    }
+}
+```
+
+优缺点说明：
+
+1. 这种方式采用了类装载的机制来保证初始化实例时只有一个线程
+2. 静态内部类在外部类被装载时并不会被立即实例化，而是调用需要使用静态内部类的方法时，才会装载该内部类
+3. 我们将外部类实例设置为内部类的静态属性，这样即实现了 Lazy Loading + 线程安全 + 效率高
+4. 优点：避免了**线程不安全**，利用静态内部类特点实现 Lazy Loading，效率高
+5. 结论：推荐使用
+
+##### 枚举
+
+代码：
+
+```java
+public class Demo8 {
+
+    public static void main(String[] args) {
+        Singleton8 instance = Singleton8.getInstance();
+        Singleton8 instance1 = Singleton8.getInstance();
+        System.out.println(instance == instance1);
+    }
+
+}
+
+class Singleton8 {
+
+    /**
+     * 私有化构造器
+     */
+    private Singleton8() {
+
+    }
+
+    private enum Singleton8Enum {
+
+        /**
+         * 枚举类实例
+         */
+        INSTANCE_ENUM;
+
+        private final Singleton8 singleton8;
+
+        Singleton8Enum() {
+            // 在初始化枚举类实例时完成对 外部类实例属性的 初始化
+            singleton8 = new Singleton8();
+        }
+
+        /**
+         * 提供一个方法将实例属性暴漏出去,也可以直接访问，但这样扩展性高一点
+         * @return
+         */
+        public Singleton8 getInstance() {
+            return singleton8;
+        }
+    }
+
+    public static Singleton8 getInstance() {
+        return Singleton8Enum.INSTANCE_ENUM.getInstance();
+    }
+    
+}
+```
+
+优缺点说明：
+
+1. 反射安全
+2. 序列化/反序列化安全
+3. **写法简单**
+4. 这种方式是`Effective Java`作者`Josh Bloch`提倡的方式，它不仅能避免多线程同步问题，而且还能防止反序列化**重新创建新的对象**，可谓是很坚强的壁垒啊。
+5. 结论：**非常推荐使用**
+
+#### 在 JDK 源码中的体现
+
+`java.lang.Runtime` -> [饿汉式-静态常量]
+
+ ![image-20220510230052755](README.assets/image-20220510230052755.png)
+
+#### 注意事项和细节说明
+
+1. 单例模式保证了系统内只存在该类的一个对象，节省系统资源，对于一些需要频繁创建/销毁的对象，使用单例模式可以提高性能
+2. 要想实例化一个类是，是通过一个`public static`方法获取，而不是 `new`
+3. 使用场景：需要频繁的进行创建/销毁的对象，创建对象时需要消耗过多的资源但又需要经常使用的对象
+
+## 结构型模式
+
+
+
+## 行为型模式
+
+## 
