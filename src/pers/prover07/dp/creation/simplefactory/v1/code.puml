@@ -1,0 +1,31 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class Pizza {
+    - name: String
+    + {abstract} prepare(): void
+    + bake(): void
+    + cut(): void
+    + box(): void
+}
+class GreekPizza {
+    + prepare(): void
+}
+class PepperPizza {
+    + prepare(): void
+}
+
+Pizza <|-- GreekPizza
+Pizza <|-- PepperPizza
+
+class OrderPizza {
+    + createPizza(): Pizza
+}
+OrderPizza --> Pizza
+OrderPizza --> GreekPizza
+OrderPizza --> PepperPizza
+
+class PizzaStore
+
+PizzaStore --> OrderPizza
+@enduml

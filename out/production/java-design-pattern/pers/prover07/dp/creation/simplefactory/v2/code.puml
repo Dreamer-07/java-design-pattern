@@ -1,0 +1,42 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class Pizza {
+    - name: String
+    + {abstract} prepare(): void
+    + bake(): void
+    + cut(): void
+    + box(): void
+}
+class GreekPizza {
+    + prepare(): void
+}
+class PepperPizza {
+    + prepare(): void
+}
+
+Pizza <|-- GreekPizza
+Pizza <|-- PepperPizza
+
+class PizzaFactory {
+    + createPizza(type: String): Pizza
+}
+
+PizzaFactory --> Pizza
+PizzaFactory --> GreekPizza
+PizzaFactory --> PepperPizza
+
+class OrderPizza {
+    - pizzaFactory: PizzaFactory
+    + setPizzaFactory(pizzaFactory: PizzaFactory): void
+}
+OrderPizza o-- PizzaFactory
+note right on link #blue
+    避免使用方需要修改过多代码，使用Factory封装处理逻辑
+end note
+
+class PizzaStore
+
+PizzaStore --> OrderPizza
+
+@enduml

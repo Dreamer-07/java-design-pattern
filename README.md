@@ -1526,11 +1526,12 @@ class Singleton8 {
 
 优缺点说明：
 
-1. 反射安全
-2. 序列化/反序列化安全
-3. **写法简单**
-4. 这种方式是`Effective Java`作者`Josh Bloch`提倡的方式，它不仅能避免多线程同步问题，而且还能防止反序列化**重新创建新的对象**，可谓是很坚强的壁垒啊。
-5. 结论：**非常推荐使用**
+1. 多线程安全 + Lazy Coding + 效率高
+2. 反射安全
+3. 序列化/反序列化安全
+4. **写法简单**
+5. 这种方式是`Effective Java`作者`Josh Bloch`提倡的方式，它不仅能避免多线程同步问题，而且还能防止反序列化**重新创建新的对象**，可谓是很坚强的壁垒啊。
+6. 结论：**非常推荐使用**
 
 #### 在 JDK 源码中的体现
 
@@ -1543,6 +1544,266 @@ class Singleton8 {
 1. 单例模式保证了系统内只存在该类的一个对象，节省系统资源，对于一些需要频繁创建/销毁的对象，使用单例模式可以提高性能
 2. 要想实例化一个类是，是通过一个`public static`方法获取，而不是 `new`
 3. 使用场景：需要频繁的进行创建/销毁的对象，创建对象时需要消耗过多的资源但又需要经常使用的对象
+
+### 简单工厂(静态工厂)
+
+#### 需求分析
+
+ ![image-20220510232725219](README.assets/image-20220510232725219.png)
+
+#### 传统实现
+
+> UML 类图分析
+
+ ![image-20220511094742546](README.assets/image-20220511094742546.png)
+
+> 代码实现
+
+1. 定义披萨类
+
+   ```java
+   public abstract class Pizza {
+   
+       private String name;
+   
+       public Pizza(String name) {
+           this.name = name;
+       }
+   
+       /**
+        * 制作原材料的过程
+        */
+       public abstract void prepare();
+   
+       public void bake() {
+           System.out.println(this.name + "in bake");
+       };
+       public void cut() {
+           System.out.println(this.name + "in cut");
+       };
+       public void box() {
+           System.out.println(this.name + "in box");
+       };
+   }
+   ```
+
+   ```java
+   public class GreekPizza extends Pizza{
+   
+       public GreekPizza(String name) {
+           super(name);
+       }
+   
+       @Override
+       public void prepare() {
+           System.out.println("Greek Pizza in prepare");
+       }
+   }
+   ```
+
+   ```java
+   public class PepperPizza extends Pizza {
+   
+       public PepperPizza(String name) {
+           super(name);
+       }
+   
+       @Override
+       public void prepare() {
+           System.out.println("PepperPizza in prepare");
+       }
+   }
+   ```
+
+2. 定义一个订单披萨类，用来接收用户请求并创建披萨
+
+   ```java
+   public class OrderPizza {
+   
+       public Pizza createPizza() {
+           Pizza pizza = null;
+           String orderType = getType(); // 订购的披萨类型
+   
+           if ("greek".equals(orderType)) {
+               pizza = new GreekPizza(" 希腊披萨 ");
+           } else if ("pepper".equals(orderType)) {
+               pizza = new PepperPizza("胡椒披萨");
+           } else {
+               System.out.println("该披萨类型不存在");
+               return null;
+           }
+   
+           //输出pizza 制作过程
+           pizza.prepare();
+           pizza.bake();
+           pizza.cut();
+           pizza.box();
+   
+           return pizza;
+       }
+   
+       // 写一个方法，可以获取客户希望订购的披萨种类
+       private String getType() {
+           try {
+               BufferedReader strin = new BufferedReader(new InputStreamReader(System.in));
+               System.out.println("input pizza 种类:");
+               String str = strin.readLine();
+               return str;
+           } catch (IOException e) {
+               e.printStackTrace();
+               return "";
+           }
+       }
+   
+   }
+   ```
+
+3. 创建一个 OrderStoreApp 类，用来下订单
+
+   ```java
+   public class PizzaStoreApp {
+   
+       public static void main(String[] args) {
+           OrderPizza orderPizza = new OrderPizza();
+           orderPizza.createPizza();
+       }
+   
+   }
+   ```
+
+> 优缺点说明
+
+- 优点：编码简单，易于操作
+
+- 缺点：违反了 ocp 原则(对扩展开发，对修改关闭)，当我们给类新增一个功能时，对使用方来说尽量不修改代码(或尽可能少)
+
+  这里如果我们需要新加一个 Pizza 类，不仅需要实现原来的抽象类，对于使用方 **OrderPizza** 中处理披萨的逻辑也要修改
+
+> 改进思路分析：
+
+我们可以将创建 Pizza 对象的过程封装到一个类中，这样当我们有了新的 Pizza 类时，统一修改那个类就好了，对外使用方就不用修改代码了 --> 简单工厂
+
+#### 简单工厂模式
+
+> UML 类图
+
+ ![image-20220511144409356](README.assets/image-20220511144409356.png)
+
+> 代码实现
+
+1. 创建一个 PizzaFactory 并提供一个方法统一创建 Pizza 对象
+
+   ```java
+   public class PizzaFactory {
+   
+       /**
+        * 封装创建实例的过程，避免由于底层代码的扩展而倒是使用者修改大部分代码
+        * @param type
+        * @return
+        */
+       public Pizza createPizza(String type) {
+           Pizza pizza;
+   
+           if ("greek".equals(type)) {
+               pizza = new GreekPizza(" 希腊披萨 ");
+           } else if ("pepper".equals(type)) {
+               pizza = new PepperPizza("胡椒披萨");
+           } else {
+               System.out.println("该披萨类型不存在");
+               return null;
+           }
+   
+           //输出pizza 制作过程
+           pizza.prepare();
+           pizza.bake();
+           pizza.cut();
+           pizza.box();
+   
+           return pizza;
+       }
+   
+   }
+   ```
+
+2. 重构 **OrderPizza**
+
+   ```java
+   public class OrderPizza {
+   
+       private PizzaFactory pizzaFactory;
+   
+       public void setPizzaFactory(PizzaFactory pizzaFactory) {
+           this.pizzaFactory = pizzaFactory;
+       }
+   
+       /**
+        * 使用方只用整合 pizzaFactory，传递数据就能得到结果，而具体实现不用在意
+        * @return
+        */
+       public Pizza createPizza() {
+           String type = getType();
+           return pizzaFactory.createPizza(type);
+       }
+   
+       // 写一个方法，可以获取客户希望订购的披萨种类
+       private String getType() {
+           try {
+               BufferedReader strin = new BufferedReader(new InputStreamReader(System.in));
+               System.out.println("input pizza 种类:");
+               String str = strin.readLine();
+               return str;
+           } catch (IOException e) {
+               e.printStackTrace();
+               return "";
+           }
+       }
+   
+   }
+   ```
+
+3. 使用
+
+   ```java
+   public class PizzaStoreApp {
+   
+       public static void main(String[] args) {
+           OrderPizza orderPizza = new OrderPizza();
+           orderPizza.setPizzaFactory(new PizzaFactory());
+           orderPizza.createPizza();
+       }
+   
+   }
+   ```
+
+> 优缺点说明
+
+可以把 **Factory + 实体类** 看作是一个**框架**，而 **Order & Store** 就是**使用框架的人**；
+
+​	作为框架开发者当我们需要扩展时可以通过继承抽象类来实现，然后修改 Factory 以便暴漏新功能使用接口(对扩展开放)
+
+​	作为框架使用者我们只需要关注如何传递正确的参数即可(对修改关闭)
+
+#### 静态工厂
+
+其实就是将 Factory 中提供实例的方法改成静态的方便调用
+
+```java
+public static Pizza createPizza(String type)
+```
+
+```java
+public Pizza createPizza() {
+    String type = getType();
+    return PizzaFactory.createPizza(type);
+}
+```
+
+```java
+public static void main(String[] args) {
+    OrderPizza orderPizza = new OrderPizza();
+    orderPizza.createPizza();
+}
+```
 
 ## 结构型模式
 
