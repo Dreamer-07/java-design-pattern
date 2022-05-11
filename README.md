@@ -1533,7 +1533,7 @@ class Singleton8 {
 5. 这种方式是`Effective Java`作者`Josh Bloch`提倡的方式，它不仅能避免多线程同步问题，而且还能防止反序列化**重新创建新的对象**，可谓是很坚强的壁垒啊。
 6. 结论：**非常推荐使用**
 
-#### 在 JDK 源码中的体现
+#### JDK 源码
 
 `java.lang.Runtime` -> [饿汉式-静态常量]
 
@@ -1545,13 +1545,15 @@ class Singleton8 {
 2. 要想实例化一个类是，是通过一个`public static`方法获取，而不是 `new`
 3. 使用场景：需要频繁的进行创建/销毁的对象，创建对象时需要消耗过多的资源但又需要经常使用的对象
 
-### 简单工厂(静态工厂)
+### 工厂模式
 
-#### 需求分析
+#### 简单工厂(静态工厂)
+
+##### 需求分析
 
  ![image-20220510232725219](README.assets/image-20220510232725219.png)
 
-#### 传统实现
+##### 传统实现
 
 > UML 类图分析
 
@@ -1683,7 +1685,7 @@ class Singleton8 {
 
 我们可以将创建 Pizza 对象的过程封装到一个类中，这样当我们有了新的 Pizza 类时，统一修改那个类就好了，对外使用方就不用修改代码了 --> 简单工厂
 
-#### 简单工厂
+##### 简单工厂
 
 > UML 类图
 
@@ -1782,7 +1784,7 @@ class Singleton8 {
   - 如果要扩展新的类，修改工厂类即可，而不需要修改原代码，降低了客户端代码修改的可能性，更加容易扩展
 - 缺点：增加新产品时还是需要修改工厂类，违背了 **开闭原则**
 
-#### 静态工厂
+##### 静态工厂
 
 其实就是将 Factory 中提供实例的方法改成静态的方便调用
 
@@ -1804,9 +1806,9 @@ public static void main(String[] args) {
 }
 ```
 
-### 工厂方法
+#### 工厂方法
 
-#### 需求分析
+##### 需求分析
 
 - 针对简单工厂中没有遵守 ocp 原则的缺陷提出新的方法
 - 概念：将进行生成实例的工厂接口化，让实现类决定要生成的产品类对象。工厂方法使一个产品类的实例化延迟到了工厂的子类
@@ -1816,7 +1818,7 @@ public static void main(String[] args) {
   - 抽象产品：定义了产品的规范，描述产品的主要特性和功能
   - 具体产品：根据抽象产品的规范，实现其接口，由一个对应的具体工厂来创建，与对应的具体工厂之间一一对应
 
-#### 代码实现
+##### 代码实现
 
 > UML 类图
 
@@ -1885,7 +1887,7 @@ public static void main(String[] args) {
    orderPizza.createPizza();
    ```
 
-#### 优缺点说明
+##### 优缺点说明
 
 - 优点：
   - 用户只要知道具体工厂的名称就可以得到所要的产品，无需知道产品的具体创建过程
@@ -1893,7 +1895,215 @@ public static void main(String[] args) {
 - 缺点：
   - 每增加一个产品就要新增两个类，增加了系统的复杂度
 
-## 结构型模式
+#### 抽象工厂
+
+##### 简介
+
+- 工厂方法提供的是针对一种产品的生产
+
+- 一般我们将同类型的产品称为**同等级产品**(例如：笔记本，台式都是电脑)，而抽象工厂**主要应用于多等级产品的生产**
+
+- 我们也将在**同一工厂内不同等级(类型)的产品**称为一个**产品族**
+
+  ![image-20220511161210700](README.assets/image-20220511161210700.png)
+
+- 可以为客户端提供一个能**创建一组相关或相互依赖对象(产品)**的接口，且访问类无需指定所要产品的具体类就能得到**不同等级同一族(当然了是相关/相互依赖的不是瞎凑的)**的产品
+
+- 结构
+
+  ![image-20220511161702233](README.assets/image-20220511161702233.png)
+
+##### 代码实现
+
+> UML 类图
+
+ ![image-20220511183357138](README.assets/image-20220511183357138.png)
+
+> 代码
+
+1. 新建一个抽象产品类 **Drinks** 和两个具体产品类 **Cola & Sprite**
+
+   ```java
+   public abstract class Drinks {
+       private String name;
+   
+       public Drinks(String name) {
+           this.name = name;
+       }
+   
+       public String getName() {
+           return name;
+       }
+   }
+   ```
+
+2. 创建一个抽象工厂并定义可以生产的产品规范
+
+   ```java
+   public interface ComboFactory {
+   
+       Pizza createPizza();
+   
+       Drinks createDrinks();
+   
+   }
+   ```
+
+3. 以产品族为依据，实现 **ComboFactory** 以实现生产不同的产品
+
+   ```java
+   public class PepperPizzaSpriteDrinksFactory implements ComboFactory {
+       @Override
+       public Pizza createPizza() {
+           return new PepperPizza("PepperPizza");
+       }
+   
+       @Override
+       public Drinks createDrinks() {
+           return new Sprite("Sprite");
+       }
+   }
+   ```
+
+   ```java
+   public class GreekPizzaColaDrinksFactory implements ComboFactory {
+       @Override
+       public Pizza createPizza() {
+           return new GreekPizza("Greek Pizza");
+       }
+   
+       @Override
+       public Drinks createDrinks() {
+           return new Cola("Cola");
+       }
+   }
+   ```
+
+4. 使用
+
+   ```java
+   public static void main(String[] args) {
+       // GreekPizzaColaDrinksFactory factory = new GreekPizzaColaDrinksFactory();
+       PepperPizzaSpriteDrinksFactory factory = new PepperPizzaSpriteDrinksFactory();
+       System.out.println(factory.createDrinks().getName());
+       System.out.println(factory.createPizza().getName());
+   }  
+   ```
+
+##### 优缺点说明
+
+优点：当一个产品族的多个对象被设计成**一起工作时**，可以保证客户端始终使用的是同一个产品族中的对象
+
+缺点：当产品族需要增加一个新的产品时，相关的工厂类都需要进行修改
+
+##### 使用场景
+
+![image-20220511162345367](README.assets/image-20220511162345367.png)
+
+#### 配置文件+简单工厂
+
+##### 简介
+
+- 可以通过**工厂模式 + 配置文件** ==>(实现) **工厂对象与产品对象的解耦**
+
+- 在工厂类中加载配置文件，并创建对应的产品对象进行存储，客户端需要时直接获取即可
+
+##### 代码实现
+
+1. 创建 `bean.properties` 用来记录产品对象
+
+   ```java
+   greekPizza=pers.prover07.dp.creation.factory.propfactory.entity.GreekPizza
+   pepperPizza=pers.prover07.dp.creation.factory.propfactory.entity.PepperPizza
+   ```
+
+2. 创建一个工厂类，在类加载时读取配置文件
+
+   ```java
+   public class PizzaFactory {
+   
+       private static HashMap<String, Pizza> pizzaHashMap = new HashMap<>();
+   
+       static {
+           // 创建 properties 对象
+           Properties properties = new Properties();
+           // 获取配置文件输入流
+           InputStream is = PizzaFactory.class.getClassLoader().getResourceAsStream("./pers/prover07/dp/creation/factory/propfactory/bean.properties");
+           try {
+               // 加载配置文件
+               properties.load(is);
+               // 获取 properties 文件中定义的 key
+               for (Object key : properties.keySet()) {
+                   // 获取定义的 className
+                   String className = (String) properties.get(key);
+                   // 通过反射创建对象
+                   Pizza pizza = (Pizza) Class.forName(className).newInstance();
+                   // 保存起来
+                   pizzaHashMap.put((String) key, pizza);
+               }
+           } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+               e.printStackTrace();
+           }
+   
+       }
+   
+       public static Pizza getPizza(String type) {
+           return pizzaHashMap.get(type);
+       }
+   
+   }
+   ```
+
+   注意：记得修改产品类，原本的产品类**没有无参构造器**!!
+
+3. 使用
+
+   ```java
+   public class OrderStoreApp {
+   
+       public static void main(String[] args) {
+           System.out.println(PizzaFactory.getPizza("greekPizza"));
+       }
+   
+   }
+   ```
+
+#### JDK 源码
+
+`java.util.Collection.iterator()` 方法中使用到了[工厂方法]模式 
+
+使用其对集合进行遍历
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        Collection<String> collection = new ArrayList<>();
+        collection.add("令狐冲");
+        collection.add("风清扬");
+        collection.add("任我行");
+        // 获取迭代器对象, Iterator 是迭代器接口，这里实际上是 ArrayList 内部实现的迭代器(具体产品)
+        Iterator<String> it = collection.iterator();
+        // 使用迭代器遍历
+        while(it.hasNext()) {
+            String ele = it.next();
+            System.out.println(ele);
+        }
+    }
+}
+```
+
+可以发现，我们通过调用 `Collection.iterator()` 就能得到对应的 **Iterator** 对象，我们可以将其分个角色:
+
+- Collection - 抽象工厂：由于不同集合的遍历方式不同，所以定义`iterator()`方法的规范，让每个具体工厂实现自己的具体产品
+- Iterator - 抽象产品：规定了产品规范
+- ArrayList - 具体工厂
+- ArrayList$Itr - 具体产品：**ArrayList** 中的内部类，根据规范实现遍历 ArrayList(HashMap)
+
+![image-20220511225129649](README.assets/image-20220511225129649.png)
+
+## 结构型模
+
+## 式
 
 
 

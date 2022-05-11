@@ -1,0 +1,46 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class Drinks {
+    - name: String
+    + getName(): String
+}
+abstract class Pizza {
+    - name: String
+    + {abstract} prepare(): void
+    + bake(): void
+    + cut(): void
+    + box(): void
+}
+
+class GreekPizza {
+    + prepare(): void
+}
+class PepperPizza {
+    + prepare(): void
+}
+
+Pizza <|-- GreekPizza
+Pizza <|-- PepperPizza
+
+class Cola
+class Sprite
+Drinks <|-- Cola
+Drinks <|-- Sprite
+
+interface ComboFactory {
+    {abstract} createPizza(): Pizza
+    {abstract} createDrinks(): Drinks
+}
+
+class GreekPizzaColaDrinksFactory
+GreekPizzaColaDrinksFactory --> Pizza
+GreekPizzaColaDrinksFactory --> Drinks
+class PepperPizzaSpriteDrinksFactory
+PepperPizzaSpriteDrinksFactory --> Pizza
+PepperPizzaSpriteDrinksFactory --> Drinks
+
+ComboFactory <.. GreekPizzaColaDrinksFactory
+ComboFactory <.. PepperPizzaSpriteDrinksFactory
+
+@enduml
