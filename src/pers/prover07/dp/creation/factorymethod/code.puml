@@ -1,0 +1,52 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class Pizza {
+    - name: String
+    + {abstract} prepare(): void
+    + bake(): void
+    + cut(): void
+    + box(): void
+}
+
+class GreekPizza {
+    + prepare(): void
+}
+class PepperPizza {
+    + prepare(): void
+}
+
+Pizza <|-- GreekPizza
+Pizza <|-- PepperPizza
+
+interface PizzaFactory {
+    {abstract} createPizza(): Pizza
+}
+
+interface GreekPizzaFactory {
+    createPizza(): Pizza
+}
+
+PizzaFactory <.. GreekPizzaFactory
+GreekPizzaFactory --> GreekPizza
+
+interface PepperPizzaFactory {
+    createPizza(): Pizza
+}
+
+PizzaFactory <.. PepperPizzaFactory
+PepperPizzaFactory --> PepperPizza
+note right on link #blue
+    一个具体工厂来定义要生产的具体产品
+end note
+
+class orderPizza {
+    - pizzaFactory: PizzaFactory
+    + setPizzaFactory(pizzaFactory: PizzaFactory): void
+    + createPizza(): Pizza
+}
+orderPizza o-- PizzaFactory
+
+class OrderStore
+OrderStore --> orderPizza
+@enduml

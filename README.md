@@ -1683,7 +1683,7 @@ class Singleton8 {
 
 我们可以将创建 Pizza 对象的过程封装到一个类中，这样当我们有了新的 Pizza 类时，统一修改那个类就好了，对外使用方就不用修改代码了 --> 简单工厂
 
-#### 简单工厂模式
+#### 简单工厂
 
 > UML 类图
 
@@ -1777,11 +1777,10 @@ class Singleton8 {
 
 > 优缺点说明
 
-可以把 **Factory + 实体类** 看作是一个**框架**，而 **Order & Store** 就是**使用框架的人**；
-
-​	作为框架开发者当我们需要扩展时可以通过继承抽象类来实现，然后修改 Factory 以便暴漏新功能使用接口(对扩展开放)
-
-​	作为框架使用者我们只需要关注如何传递正确的参数即可(对修改关闭)
+- 优点：
+  - 封装了创建对象的过程，可以通过参数获取需要的实例对象，将对象的创建和业务逻辑分开，避免客户端修改代码
+  - 如果要扩展新的类，修改工厂类即可，而不需要修改原代码，降低了客户端代码修改的可能性，更加容易扩展
+- 缺点：增加新产品时还是需要修改工厂类，违背了 **开闭原则**
 
 #### 静态工厂
 
@@ -1804,6 +1803,95 @@ public static void main(String[] args) {
     orderPizza.createPizza();
 }
 ```
+
+### 工厂方法
+
+#### 需求分析
+
+- 针对简单工厂中没有遵守 ocp 原则的缺陷提出新的方法
+- 概念：将进行生成实例的工厂接口化，让实现类决定要生成的产品类对象。工厂方法使一个产品类的实例化延迟到了工厂的子类
+- 结构：
+  - 抽象工厂：提供创建产品的接口，但具体的产品不在这里定义，只是定义一个规范，调用者可以访问具体工厂来创建具体产品
+  - 具体工厂：根据抽象工厂的规范，实现对某一中产品的生产，完成对具体产品的创建
+  - 抽象产品：定义了产品的规范，描述产品的主要特性和功能
+  - 具体产品：根据抽象产品的规范，实现其接口，由一个对应的具体工厂来创建，与对应的具体工厂之间一一对应
+
+#### 代码实现
+
+> UML 类图
+
+ ![image-20220511155233566](README.assets/image-20220511155233566.png)
+
+> 代码
+
+1. 刚刚的 Pizza 类可以全部保留
+
+2. 新建一个抽象工厂
+
+   ```java
+   public interface PizzaFactory {
+   
+       Pizza createPizza();
+   
+   }
+   ```
+
+3. 根据具体产品创建对应的具体工厂
+
+   ```java
+   public class PepperPizzaFactory implements PizzaFactory {
+       @Override
+       public Pizza createPizza() {
+           return new PepperPizza("Pepper Pizza");
+       }
+   }
+   ```
+
+   ```java
+   public class GreekPizzaFactory implements PizzaFactory {
+       @Override
+       public Pizza createPizza() {
+           return new GreekPizza("Greek Pizza");
+       }
+   }
+   ```
+
+4. 修改 OrderPizza
+
+   ```java
+   public class OrderPizza {
+   
+       private PizzaFactory pizzaFactory;
+   
+       public void setPizzaFactory(PizzaFactory pizzaFactory) {
+           this.pizzaFactory = pizzaFactory;
+       }
+   
+       public void createPizza() {
+           Pizza pizza = pizzaFactory.createPizza();
+           pizza.prepare();
+           pizza.bake();
+           pizza.cut();
+           pizza.box();
+       }
+   }
+   ```
+
+5. 使用
+
+   ```java
+   OrderPizza orderPizza = new OrderPizza();
+   orderPizza.setPizzaFactory(new GreekPizzaFactory());
+   orderPizza.createPizza();
+   ```
+
+#### 优缺点说明
+
+- 优点：
+  - 用户只要知道具体工厂的名称就可以得到所要的产品，无需知道产品的具体创建过程
+  - 在系统新增产品的时候，只需要创建对应的具体产品和具体工厂，无须对原工厂和使用方进行任何修改，满足**开闭原则**
+- 缺点：
+  - 每增加一个产品就要新增两个类，增加了系统的复杂度
 
 ## 结构型模式
 
