@@ -2101,9 +2101,185 @@ public class Demo {
 
 ![image-20220511225129649](README.assets/image-20220511225129649.png)
 
-## 结构型模
+### 原型模式
 
-## 式
+#### 简介
+
+- 通过原型实例(就是对象)来指定创建对象的种类(创建和当前对象一样类型的)，并通过拷贝这些原型(复制属性)，创建新的对象
+
+- 原型模式是一种创建型设计模式，允许通过一个对象创建另一个相同类型的对象，而无需创建的细节
+
+- 结构
+
+   ![image-20220512084138103](README.assets/image-20220512084138103.png)
+
+#### 代码
+
+> UML 类图
+
+ ![image-20220512084016996](README.assets/image-20220512084016996.png)
+
+> 代码实现
+
+1. 创建一个抽象原型类 **Shape**
+
+   ```java
+   public abstract class Shape implements Cloneable {
+   
+       private String id;
+       private String name;
+   
+       abstract void draw();
+   
+       public String getId() {
+           return id;
+       }
+   
+       public String getName() {
+           return name;
+       }
+   
+       public void setId(String id) {
+           this.id = id;
+       }
+   
+       public void setName(String name) {
+           this.name = name;
+       }
+   
+       @Override
+       public Object clone() {
+           Object obj = null;
+           try {
+               obj =  super.clone();
+           } catch (CloneNotSupportedException e) {
+               e.printStackTrace();
+           }
+           return obj;
+       }
+   }
+   ```
+
+2. 创建具体原型类，继承 Shape 
+
+   ```java
+   public class Rectangle extends Shape{
+   
+       public Rectangle() {
+           this.setName("rectangle");
+       }
+   
+       @Override
+       void draw() {
+           System.out.println("draw rectangle");
+       }
+   }
+   ```
+
+3. 使用
+
+   ```java
+   public static void main(String[] args) {
+       Rectangle rectangle = new Rectangle();
+       Rectangle rectangle2 = (Rectangle) rectangle.clone();
+       // false
+       System.out.println(rectangle == rectangle2);
+   }
+   ```
+
+#### Spring 源码
+
+- 当我们创建一个 Bean 时可以指定它的 **scope**
+
+  ```java
+  @Bean("prototype")
+  public Rectangle rectangle(){
+  ```
+
+- 在 `scope=prototype` 时获取对应的 Bean 实例，Spring 就会调用相应的 `.clone()` 方法完成对对象的创建
+
+   ![在这里插入图片描述](README.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70#pic_center.png)
+
+#### 深拷贝
+
+- 浅拷贝与深拷贝的区别：
+
+  - 浅拷贝：通过调用 `.clone()` 方法完成; 对于对象中的 **基本类型数据会直接复制，引用类型数据会直接复制引用,而不是新建**
+  - 深拷贝：对于对象中的 **基本类型数据会直接复制，引用类型数据会重新申请存储空间,并复制每个引用数据类型成员变量所引用的对象,直到该对象可达的所有对象**
+
+- 实现：https://juejin.cn/post/6844903693100417038#heading-15
+
+- 扩展：通过 I/O 流完成深拷贝
+
+  1. Shape(抽象原型类)实现序列化接口
+
+     ```java
+     public abstract class Shape implements Cloneable, Serializable
+     ```
+
+  2. 新增 `public deepClone()` 方法
+
+     ```java
+     public Object deepClone() {
+         //创建流对象
+         ByteArrayOutputStream bos = null;
+         ObjectOutputStream oos = null;
+         ByteArrayInputStream bis = null;
+         ObjectInputStream ois = null;
+         try {
+     
+             //序列化
+             bos = new ByteArrayOutputStream();
+             oos = new ObjectOutputStream(bos);
+             oos.writeObject(this); //当前这个对象以对象流的方式输出
+     
+             //反序列化
+             bis = new ByteArrayInputStream(bos.toByteArray());
+             ois = new ObjectInputStream(bis);
+     
+             return ois.readObject();
+     
+         } catch (Exception e) {
+             e.printStackTrace();
+             return null;
+         } finally {
+             //关闭流
+             try {
+                 assert bos != null;
+                 bos.close();
+                 assert oos != null;
+                 oos.close();
+                 assert bis != null;
+                 bis.close();
+                 assert ois != null;
+                 ois.close();
+             } catch (Exception e2) {
+                 // TODO: handle exception
+                 System.out.println(e2.getMessage());
+             }
+         }
+     }
+     ```
+
+#### 注意事项和细节
+
+1. 不用重新初始化对象，而是动态地获得对象运行时的状态
+
+2. 如果原始对象发生变化(增加或者减少属性)，其它克隆对象的也会发生相应的变化，无需修改代码
+
+3. 一个对象需要提供给其他对象访问，而且各个调用者可能都需要修改其值时，可以考虑使用原型模式拷贝多个对象供调用者使用。
+
+4. 在实际项目中，原型模式很少单独出现，一般是和**工厂方法模式**一起出现，通过 clone 的方法创建一个对象，然后由工厂方法提供给调用者。
+
+5. 调用 `.clone()` 方法时是**不会调用无参构造器**的
+
+   > 克隆时，根据源对象类型先分配和源对象相同的内存，然后将源对象中的各个域中数据拷贝过来，最后返回对象地址。
+   >
+   > new时，第1步也是先分配内存，然后调用构造方法初始化数据，最后将对象地址返回，外界就可以通过这个对象地址(引用)操作此对象。
+
+6. 缺点：需要为每一个类配备一个克隆方法，这对全新的类来 说不是很难，但对已有的类进行改造时，需要修改其源代码， 违背了**ocp**原则
+
+## 结构型模式
 
 
 

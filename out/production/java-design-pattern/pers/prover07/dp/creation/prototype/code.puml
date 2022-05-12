@@ -1,0 +1,37 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+
+abstract class Shape {
+    - id: String
+    - type: String
+    {abstract} draw(): void
+    + getType(): String
+    + getId(): String
+    + clone(): Object
+}
+note top of Shape
+    抽象原型类: 声明克隆方法clone()
+end note
+class Rectangle {
+    + draw(): void
+}
+class Square {
+    + draw(): void
+}
+class Circle {
+    + draw(): void
+}
+
+Shape <|-- Rectangle
+Shape <|-- Square
+Shape <|-- Circle
+
+class Client
+
+Client --> Shape::clone
+note right on link #blue
+    调用抽象原型类中的方法完成对具体圆形类的拷贝
+end note
+
+@enduml
