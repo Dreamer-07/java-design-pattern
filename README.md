@@ -1096,6 +1096,8 @@ Person *-- Head
 
 ## 创建型模式
 
+> 5种：单例模式 + 工厂模式(简单工厂&工厂方法) + 建造者模式 + 抽象工厂 + 原型模式
+
 ### 单例模式
 
 #### 简介
@@ -2278,6 +2280,209 @@ public class Demo {
    > new时，第1步也是先分配内存，然后调用构造方法初始化数据，最后将对象地址返回，外界就可以通过这个对象地址(引用)操作此对象。
 
 6. 缺点：需要为每一个类配备一个克隆方法，这对全新的类来 说不是很难，但对已有的类进行改造时，需要修改其源代码， 违背了**ocp**原则
+
+### 建造者模式
+
+#### 简介
+
+- 又称为生成器模式；是一种对象构建过程，可以将复杂对象的过程抽象出来，根据抽象过程的不同实现方法构造出来不同表现(属性)的对象
+- 它允许用户只通过指定复杂对象的类型和内容就可以构建它们，用户不需要知道内部的具体构建细节。
+
+#### 角色
+
+1. Product（产品角色）： 一个具体的产品对象。
+
+2. Builder（抽象建造者）： 创建一个 Product 对象的各个部件(抽象方法)指定的 接口/抽象类。
+
+3. ConcreteBuilder（具体建造者）： 实现接口，构建和装配各个部件。
+
+4. Director（指挥者）： 构建一个使用Builder接口的对象。它主要是用于创建一个复杂的对象。
+
+  它主要有两个作用：一是：隔离了客户与对象的生产过程，二是：负责控制产品对象的生产过程。
+
+#### 代码
+
+> UML 类图
+
+ ![image-20220512103010279](README.assets/image-20220512103010279.png)
+
+> 代码实现
+
+1. 创建一个产品
+
+   ```java
+   public class Phone {
+   
+       private String name;
+   
+       private String cpu;
+   
+       private String camera;
+   
+       public String getName() {
+           return name;
+       }
+   
+       public void setName(String name) {
+           this.name = name;
+       }
+   
+       public String getCpu() {
+           return cpu;
+       }
+   
+       public void setCpu(String cpu) {
+           this.cpu = cpu;
+       }
+   
+       public String getCamera() {
+           return camera;
+       }
+   
+       public void setCamera(String camera) {
+           this.camera = camera;
+       }
+   }
+   ```
+
+2. 定义一个抽象建造者
+
+   ```java
+   public abstract class PhoneBuilder {
+   
+       private Phone phone = new Phone();
+   
+       // 定义生产一个手机需要的生产过程
+       public abstract PhoneBuilder buildName();
+       public abstract PhoneBuilder buildCpu();
+       public abstract PhoneBuilder buildCamera();
+   
+       /**
+        * 返回产品
+        * @return
+        */
+       public Phone getPhone() {
+           return phone;
+       }
+   
+   }
+   ```
+
+3. 编写具体建造者，制定每个产品实现的不同细节
+
+   ```java
+   public class HuaWeiBuilder extends PhoneBuilder{
+       @Override
+       public PhoneBuilder buildName() {
+           this.getPhone().setName("华为手机");
+           return this;
+       }
+   
+       @Override
+       public PhoneBuilder buildCpu() {
+           this.getPhone().setCpu("华为手机Cpu");
+           return this;
+       }
+   
+       @Override
+       public PhoneBuilder buildCamera() {
+           this.getPhone().setCamera("华为手机Camrea");
+           return this;
+       }
+   }
+   ```
+
+   ```java
+   public class IPhoneBuilder extends PhoneBuilder{
+       @Override
+       public PhoneBuilder buildName() {
+           this.getPhone().setName("苹果手机");
+           return this;
+       }
+   
+       @Override
+       public PhoneBuilder buildCpu() {
+           this.getPhone().setCpu("苹果手机Cpu");
+           return this;
+       }
+   
+       @Override
+       public PhoneBuilder buildCamera() {
+           this.getPhone().setCamera("苹果手机Camrea");
+           return this;
+       }
+   }
+   ```
+
+4. 定义指挥者，负责产品具体的生产过程步骤以及和客户的交接
+
+   ```java
+   public class Sellers {
+   
+       private PhoneBuilder phoneBuilder;
+   
+       public void setPhoneBuilder(PhoneBuilder phoneBuilder) {
+           this.phoneBuilder = phoneBuilder;
+       }
+   
+       /**
+        * 制定生产过程的步骤
+        * @return
+        */
+       public Phone phoneBuild() {
+           phoneBuilder.buildName();
+           phoneBuilder.buildCpu();
+           phoneBuilder.buildCamera();
+           return phoneBuilder.getPhone();
+       }
+   
+   }
+   ```
+
+5. 使用
+
+   ```java
+   Sellers sellers = new Sellers();
+   sellers.setPhoneBuilder(new HuaWeiBuilder());
+   Phone phone = sellers.phoneBuild();
+   System.out.println(phone.getName());
+   ```
+
+#### JDK 源码分析
+
+`java.lang.StringBuilder` 
+
+- 由 **Appendable** 作为抽象建造者，定义产品生产过程的规范
+
+   ![image-20220512110846855](README.assets/image-20220512110846855.png)
+
+- 由 **AbstractStringBuilder** 作为具体建造者，实现了构建对应产品的细节
+
+   ![image-20220512110924721](README.assets/image-20220512110924721.png)
+
+- 由 **StringBuilder** 作为指挥者，负责与 Client 沟通并调用 **AbstractStringBuilder** 中的方法实现产品细节构建
+
+  ```java
+  @Override
+  public StringBuilder append(int i) {
+      super.append(i); // 调用 AbstractStringBuilder 中的方法
+      return this;
+  }
+  ```
+
+#### 注意事项
+
+- 客户端不知道产品细节，既可以通过指挥者得到产品，也能通过'沟通'(调用方法)实现产品细节
+- 每一个具体建造者都相对独立，而与其他的具体建造者无 关，因此可以很方便地替换具体建造者或增加新的具体建造者，**用户使用不同的具体建造者即可得到不同的产品对象**
+- 可以更加精细地控制产品的创建过程，将**复杂产品的创建步骤分解在不同的方法**中，使得创建过程更加清晰，也更方便使用程序来控制创建过程
+- 遵守开闭原则，因为**指挥者类针对抽象建造者类编程**，系统扩展方便，所以增加新的具体建造者无须修改原有类库的代码
+- 建造者模式所创建的产品一般具有较多的共同点，其组成部分相似，如果**产品之间的差异性很大，则不适合使用建造者模式**，因此其使用范围受到一定的限制
+- 如果产品的内部变化复杂，可能会导致需要定义很多具体建造者类来实现这种变化，导致系统变得很庞大，因此在这种情况下，要考虑是否选择建造者模式
+- 抽象工厂 VS 建造者模式
+  - 抽象工厂模式实现对产品家族的创建，一个产品家族是这样的一系列产品：具有不同分类维度的产品组合，采用抽象工厂模式不需要关心构建过程，只关心什么产品由什么工厂生产即可
+  - 而建造者模式则是要求按照指定 的蓝图建造产品，它的主要目的是通过组装零配件而产生一个新产品
+
+
 
 ## 结构型模式
 

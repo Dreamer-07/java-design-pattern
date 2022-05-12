@@ -1,0 +1,29 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class Phone
+note left of Phone
+    产品类
+end note
+abstract class PhoneBuilder
+note right of PhoneBuilder
+    抽象建造者
+end note
+class Sellers
+note right of Sellers
+    指挥者,负责隔离客户与建造者&产品的生产过程
+end note
+class IPhoneBuilder
+class HuaWeiBuilder
+class Client
+
+Phone <-- PhoneBuilder
+PhoneBuilder <|-- IPhoneBuilder
+note right on link #blue
+    通过具体构建者完成对产品生产的控制
+end note
+PhoneBuilder <|-- HuaWeiBuilder
+
+Client --> Sellers
+Sellers --> PhoneBuilder
+@enduml
