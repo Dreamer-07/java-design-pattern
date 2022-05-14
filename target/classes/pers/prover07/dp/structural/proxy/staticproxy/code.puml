@@ -1,0 +1,26 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+interface SellTickets {
+    sell(): void
+}
+note bottom of SellTickets
+    (抽象主题)定义代理类和真实主题实现的业务方法
+end note
+note left of SellTickets::sell {
+    卖票方法
+}
+class TrainStation
+TrainStation --|> SellTickets
+note right of TrainStation
+    (真实主题)也就是火车站，负责卖票
+end note
+
+class ProxyPoint
+ProxyPoint --|> SellTickets
+ProxyPoint --* TrainStation
+note right of ProxyPoint
+    (代理类)负责控制客户对 TrainStation 的访问
+end note
+
+@enduml

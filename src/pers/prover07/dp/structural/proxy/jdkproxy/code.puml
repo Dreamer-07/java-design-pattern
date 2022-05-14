@@ -1,0 +1,15 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+interface SellTickets
+class TrainStation
+SellTickets <|.. TrainStation
+class ProxyFactory {
+    - trainStation: TrainStation
+    + createSellTicketsProxy(): SellTickets
+}
+ProxyFactory --> TrainStation
+class Client
+Client --> ProxyFactory
+
+@enduml

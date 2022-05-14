@@ -2484,6 +2484,318 @@ public class Demo {
 
 ## 结构型模式
 
+- 结构型模式主要描述的是将**类或对象按某种布局组成更大的结构**
+- 分为类结构型模式和对象结构型模式，前者采用**继承机制**来组织接口/类，后者采用**聚合/组合**来使用对象
+- 由于组合/聚合关系比继承关系耦合度低，满足“合成复用原则”，所以对象结构型模式比类结构型模式具有更大的灵活性
+
+### 代理模式
+
+#### 简介
+
+- 由于某些原因需要给对象提供一个代理以控制该对象的访问; 这时访问对象无法直接使用目标对象，而是需要通过代理对象访问
+- 在 Java 中，按照代理类生成时机不同又分为静态代理/动态代理
+  - 静态代理：在编译器生成
+  - 动态代理：在 Java 运行时动态生成，又称为 JDK/Cglib 两种
+
+#### 结构
+
+- 抽象主题(Subject)：通过接口/抽象类声明真实主题或代理对象实现的业务方法
+- 真实主题(Real Subject)：实现了抽象主题的具体业务，是代理对象所代表的真实对象，是最终引用的对象
+- 代理类(Proxy)：提供了与真实主题相同的接口，其内部含有对真实主题的引用，可以 访问/控制/扩展 真实主题的功能
+
+#### 静态代理
+
+> UML 类图
+
+问题：
+
+![image-20220514120247910](README.assets/image-20220514120247910.png)
+
+
+
+ ![image-20220514121204551](README.assets/image-20220514121204551.png)
+
+> 代码实现
+
+1. 定义抽象主题
+
+   ```java
+   /**
+    * 抽象主题
+    */
+   public interface SellTickets {
+   
+       /**
+        * 卖票
+        */
+       void sell();
+   
+   }
+   ```
+
+2. 定义真实主题 - 火车站
+
+   ```java
+   public class TrainStation implements SellTickets{
+       @Override
+       public void sell() {
+           System.out.println("火车站卖票");
+       }
+   }
+   ```
+
+3. 定义代理类 - 为了方便用户买票，在各地设置代理方便用户买票
+
+   ```java
+   public class ProxyPoint implements SellTickets{
+       private TrainStation trainStation = new TrainStation();
+   
+       @Override
+       public void sell() {
+           System.out.println("收取代理商费用...");
+           trainStation.sell();
+       }
+   }
+   ```
+
+4. 使用
+
+   ```java
+   public static void main(String[] args) {
+       ProxyPoint proxyPoint = new ProxyPoint();
+       // 通过代理商买票
+       proxyPoint.sell();
+   }
+   ```
+
+#### JDK 动态代理
+
+> UML 类图
+
+ ![image-20220514193825037](README.assets/image-20220514193825037.png)
+
+> 代码实现
+
+1. 保持抽象主题和真实主题不变
+
+2. 编写 **ProxyFactory** 类用来动态生成代理对象
+
+   ```java
+   public class ProxyFactory {
+   
+       private TrainStation trainStation = new TrainStation();
+   
+       public SellTickets createSellTicketsProxy() {
+           return (SellTickets) Proxy.newProxyInstance(
+               // 获取类加载器
+               trainStation.getClass().getClassLoader(),
+               // 获取真实主题实现的接口
+               trainStation.getClass().getInterfaces(),
+               /*
+                   * 设置代理对象对方法的处理
+                   *   -proxy:  代理对象
+                   *   -method: 执行的方法
+                   *   -args:   执行方法的参数
+                   * */
+               (proxy, method, args) -> {
+                   // 代理类增强
+                   System.out.println("代理商收取服务费用...");
+                   // 执行原方法
+                   return method.invoke(trainStation, args);
+               }
+           );
+       }
+   
+   }
+   ```
+
+   tips: ProxyFactory 不是代理类，这里的代理类是程序运行时动态生成的!
+
+3. 使用
+
+   ```java
+   public static void main(String[] args) {
+       ProxyFactory proxyFactory = new ProxyFactory();
+       SellTickets sellTicketsProxy = proxyFactory.createSellTicketsProxy();
+       sellTicketsProxy.sell();
+   }
+   ```
+
+> 底层分析
+
+1. 获取代理类的全类名
+
+   ```java
+   System.out.println(sellTicketsProxy.getClass().getName());
+   ```
+
+2. 在代理类工作(ProxyFactory)中添加以下代码
+
+   ```java
+   public class ProxyFactory {
+   
+       static {
+           System.getProperties().put( "sun.misc.ProxyGenerator.saveGeneratedFiles" , "true" );
+       }
+   ```
+
+3. 运行代码，就可以看到代理类 `com.sun.proxy.$Proxy0`，简化一下，将默认方法和异常处理先删掉
+
+   ```java
+   public final class $Proxy0 extends Proxy implements SellTickets {
+       private static Method m3;
+   
+       // 这里的 var1 就是 ProxyFactory 中定义的
+       // super(InvocationHandler) 会将其保存到 Proxy.h 属性上
+       public $Proxy0(InvocationHandler var1) throws  {
+           super(var1);
+       }
+   
+       public final void sell() throws  {
+           // 通过 Proxy.h 调用刚刚定义 `invoke()` 方法
+           super.h.invoke(this, m3, (Object[])null);
+       }
+   
+       static {
+           // 加载方法
+           m3 = Class.forName("pers.prover07.dp.structural.proxy.jdkproxy.SellTickets").getMethod("sell");
+       }
+   }
+   ```
+
+   生成的代理类和真实类实现了同样的接口，刚刚在 ProxyFactory 中配置的 InvocationHandler 匿名内部类对象也传递给了父类
+
+   ![image-20220514200123045](README.assets/image-20220514200123045.png)
+
+   ![image-20220514200154507](README.assets/image-20220514200154507.png)
+
+> 执行流程
+
+1. 调用代理类.sell()方法
+2. 代理类.sell()方法调用的就是InvocationHandler.invoke()
+3. invoke()内部也会通过反射执行真实对象.sell()方法
+
+​	
+
+#### CGLIB 动态代理
+
+- 如果没有定义**抽象主题**，JDK代理是无法使用的，因为 JDK 动态代理要求必须定义接口，对接口进行处理
+
+- CGLIB 是一个功能强大，高性能的代理生成包；可以为没有实现接口的类提供代理，为 JDK 动态代理提供了补充
+
+- Maven 依赖
+
+  ```xml
+  <dependencies>
+      <dependency>
+          <groupId>cglib</groupId>
+          <artifactId>cglib</artifactId>
+          <version>2.2.2</version>
+      </dependency>
+  </dependencies>
+  ```
+
+> 代码实现
+
+1. 真实主题保留不变
+
+2. 创建一个新的 **ProxyFactory**(代理工厂)
+
+   ```java
+   public class ProxyFactory implements MethodInterceptor {
+   
+       /**
+        * 创建代理对象
+        * @return
+        */
+       public TrainStation createTrainStationProxy() {
+           // 类似于 JDK 代理中的 Proxy 类
+           Enhancer enhancer = new Enhancer();
+           // 设置父类(也就是真实主题类)
+           enhancer.setSuperclass(TrainStation.class);
+           // 设置增强类
+           enhancer.setCallback(this);
+           // 创建代理对象并返回
+           return (TrainStation) enhancer.create();
+       }
+   
+       /**
+        * 代理类真正执行的方法
+        * @param o
+        * @param method
+        * @param objects
+        * @param methodProxy
+        * @return
+        * @throws Throwable
+        */
+       @Override
+       public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+           System.out.println("收取代理商费用");
+           return method.invoke(new TrainStation(), objects);
+       }
+   }
+   ```
+
+3. 使用
+
+   ```java
+   public static void main(String[] args) {
+       ProxyFactory proxyFactory = new ProxyFactory();
+       TrainStation trainStationProxy = proxyFactory.createTrainStationProxy();
+       trainStationProxy.sell();
+   }
+   ```
+
+> 注意
+
+- 实现 **MethodInterceptor** 接口的类就是'增强类'，其中的 `intercept()` 就是 **执行真实主题对象方法** 的方法
+
+- 可以将 ProxyFactory 与 **MethodInterceptor**实现类 分开，这里为了方便就写在一起，如果分开记得改
+
+  ```java
+  enhancer.setCallback(增强类)
+  ```
+
+  
+
+#### 三种代理的对比
+
+- JDK代理和CGLIB代理
+
+  CGLIB 底层使用了 **ASM字节码生成框架**，使用字节码技术生成代理类，在 JDK1.6 之前比 Java 反射效率高
+
+  但需要注意：GCLIB 不能对声明为 `final` 的类/方法进行代理，因为 CGLIB 原理是**动态生成被代理类的子类**
+
+  在 JDK1.6/1.7/1.8 对 JDK 动态代理逐步优化后，
+
+  ​	调用次数少的情况下，JDK 代理效率高于 CGLIB 的代理效率; 
+
+  ​	只有当进行大量调用的时候，JDK1.6/1.7比CGLIB代理效率低一点；
+
+  ​	在 JDK1.8 的时候，JDK 效率高于 BGLIB 代理
+
+  结论：**有接口使用 JDK 动态代理，没有接口用 CGLIB 代理**
+
+- 动态代理和静态代理
+
+  ![image-20220514204209208](README.assets/image-20220514204209208.png)
+
+#### 优缺点
+
+优点：
+
+- 代理模式在 客户端与目标对象 之间起到一个中介和保护目标对象的作用
+- 代理对象可以扩展目标对象的功能
+- 代理模式能将客户端与目标对象分离，在一定程度上降低了系统的耦合度
+
+缺点
+
+- 增加了系统的复杂度
+
+#### 使用场景
+
+![image-20220514204758956](README.assets/image-20220514204758956.png)
+
 ### 适配器模式
 
 #### 简介
@@ -2765,6 +3077,10 @@ public class Demo {
   ```
 
   URL -->(获得) Handler -->(获得) HandlerAdapter ->(执行，将 request/response 转换为 handler 需要的形式) Handler
+
+
+
+### 桥接模式
 
 ## 行为型模式
 
