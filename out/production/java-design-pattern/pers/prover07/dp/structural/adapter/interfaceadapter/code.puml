@@ -1,0 +1,17 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+interface IVoltage5V
+class Voltage220V
+class Phone
+class VoltageAdapter
+
+VoltageAdapter ..|> IVoltage5V
+VoltageAdapter *-- Voltage220V
+note left on link #blue
+    通过组合的方式告诉适配器要被适配的类
+end note
+
+Phone --> VoltageAdapter
+
+@enduml

@@ -1,4 +1,4 @@
-# 设计模式
+#   设计模式
 
 ## 简介
 
@@ -2482,11 +2482,289 @@ public class Demo {
   - 抽象工厂模式实现对产品家族的创建，一个产品家族是这样的一系列产品：具有不同分类维度的产品组合，采用抽象工厂模式不需要关心构建过程，只关心什么产品由什么工厂生产即可
   - 而建造者模式则是要求按照指定 的蓝图建造产品，它的主要目的是通过组装零配件而产生一个新产品
 
-
-
 ## 结构型模式
 
+### 适配器模式
 
+#### 简介
+
+- 作用：将某个类的接口转换为客户端所需要的另一个接口
+- 目的：提高兼容性，让原本因为不匹配不能工作的两个类可以协同工作
+- 主要分为三类：类适配器/接口适配器/对象适配器
+- 工作原理：通过适配器类，让原本直接调用的类转换成合适的接口后再使用
+
+#### 类适配器
+
+核心：直接继承被被适配的类(看不懂没事先往下看)
+
+> UML 类图
+
+ ![image-20220513231647717](README.assets/image-20220513231647717.png)
+
+> 代码
+
+1. 创建被适配的类和需要转换的接口
+
+   ```java
+   public class Voltage220V {
+   
+       /**
+        * 返回 220v 电压
+        * @return
+        */
+       public int get220V() {
+           return 220;
+       }
+   
+   }
+   ```
+
+   ```java
+   public interface IVoltage5V {
+   
+       /**
+        * 返回5V电压
+        * @return
+        */
+       public int get5V();
+   
+   }
+   ```
+
+2. 创建一个手机类，还需要一个 **充电方法**，让其通过调用 **IVoltage5V** 获取5V电压完成充电
+
+   ```java
+   public class Phone {
+   
+       public void charging(IVoltage5V iVoltage5V) {
+           if (iVoltage5V.get5V() == 5) {
+               System.out.println("正在充电ing");
+           } else {
+               System.out.println("电压不足/过头啦");
+           }
+       }
+   
+   }
+   ```
+
+3. 这个时候我们并没有 **IVoltage5V** 的实现类，而且根据实际情况，我们不能直接造出5V电压，而是需要通过 **Voltage220V** 获取 220V 电压然后通过一定方式转换 --> 适配器
+
+   ```java
+   /**
+    * !!!!!!!类适配器的核心: 在于直接继承被被适配的类
+    */
+   public class VoltageAdapter extends Voltage220V implements IVoltage5V{
+       @Override
+       public int get5V() {
+           // 获取 220V 电压
+           int v = this.get220V();
+           // 进行处理转换成 5V 电压并返回
+           return v / 44;
+       }
+   }
+   ```
+
+4. 使用
+
+   ```java
+   public static void main(String[] args) {
+       Phone phone = new Phone();
+       phone.charging(new VoltageAdapter());
+   }
+   ```
+
+> 类适配器模式注意事项和细节
+
+1. Java是单继承机制，所以类适配器需要**继承被适配的类**这一点算是一个缺点, 所以另一个转换出来的必须是接口，有一定局限性;
+2. 不符合 **合成复用原则**
+
+#### 对象适配器
+
+区别：将 '继承' --> '组合'
+
+> UML 类图
+
+ ![image-20220513234356693](README.assets/image-20220513234356693.png)
+
+> 代码
+
+1. 适配类/被适配类不变
+
+2. 修改适配器类
+
+   ```java
+   public class VoltageAdapter implements IVoltage5V {
+   
+       private Voltage220V voltage220V;
+   
+       public VoltageAdapter() {
+           this.voltage220V = new Voltage220V();
+       }
+   
+       @Override
+       public int get5V() {
+           // 获取 220V 电压
+           int v = voltage220V.get220V();
+           // 进行处理转换成 5V 电压并返回
+           return v / 44;
+       }
+   }
+   ```
+
+3. 使用
+
+   ```java
+   public static void main(String[] args) {
+       Phone phone = new Phone();
+       phone.charging(new VoltageAdapter(new Voltage220V()));
+   }
+   ```
+
+​	对比其前者更加灵活
+
+#### 接口适配器
+
+> 简介
+
+- 也称为缺省适配器模式，主要用在[一个接口不想使用其所有的方法]的情况下
+
+> UML 类图：这个很简单，就不画图的
+
+> 代码
+
+1. 创建一个接口，并定义多个方法
+
+   ```java
+   public interface interfaceA {
+   
+       void func1();
+   
+       void func2();
+   
+       void func3();
+   
+       void func4();
+   
+   }
+   ```
+
+2. 如果这个使用我们只想实现 `func1()` 和 `func2()` 方法，如果全部都重写就太麻烦了(特别是接口里的抽象方法巨多的时候)
+
+   这个时候我们可以创建一个**抽象类**，并实现所有的方法
+
+   ```java
+   public abstract class InterfaceAdapter implements interfaceA {
+   
+       @Override
+       public void func1() {
+   
+       }
+   
+       @Override
+       public void func2() {
+   
+       }
+   
+       @Override
+       public void func3() {
+   
+       }
+   
+       @Override
+       public void func4() {
+   
+       }
+   }
+   ```
+
+   全部重写但是不做任何处理
+
+3. 这个时候当我们需要使用 `func1()` 和 `func2()` 方法，继承上述类，然后只重写要的方法就好啦
+
+   ```java
+   public class InterfaceClass extends InterfaceAdapter{
+   
+       @Override
+       public void func1() {
+           System.out.println("test.func1()....");
+           super.func1();
+       }
+   
+       @Override
+       public void func2() {
+           System.out.println("test.func2()....");
+           super.func2();
+       }
+   }
+   ```
+
+> tips
+
+- JDK1.8 更新了 `default` 关键字，解决接口适配器这一模式
+- 接口适配器和前面两种关联性不大
+
+#### SpringMVC 源码
+
+> 参考文档：https://cloud.tencent.com/developer/article/1516403
+
+`HandlerAdapter`
+
+- 由于 SpringMVC 中存在多种类型的 Controller(**Controller接口，HttpRequestHandler，Servlet、@RequestMapping**等)，每种 Controller 的处理方式有所不同，而 **HandlerAdapter** 作用在于将 request 中的各个属性，如 `request param` 适配为 Controller 能处理的形式
+
+  **这里我们可以明确一个概念：** HandlerAdapter 是为了适配对应的 Handler(Controller) 的，将请求/响应转换成接口方法可以使用的类型
+
+  ```java
+  public interface HandlerAdapter {
+  
+      // 判断当前的这个HandlerAdapter  是否支持给与的handler
+      // 因为一般来说：每个适配器只能作用于一种处理器（你总不能把手机适配器拿去用于电脑吧）
+      boolean supports(Object handler);
+  
+      // 核心方法：利用 Handler 处理请求，然后返回一个ModelAndView 
+      // DispatcherServlet最终就是调用此方法，来返回一个ModelAndView的~
+      @Nullable
+      ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception;
+      
+      // 同HttpServlet 的 getLastModified方法
+      // Can simply return -1 if there's no support in the handler class.
+      long getLastModified(HttpServletRequest request, Object handler);
+  
+  }
+  ```
+
+- 通过 **DispatcherServlet.doDispatch()** 使用 **HandlerAdapter**
+
+  ```java
+  protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+      ...
+      //1、根据URL（当然不一定非得是URL）匹配到一个处理器
+      mappedHandler = getHandler(processedRequest);
+      if (mappedHandler == null) {
+          // 若匹配不到Handler处理器，就404了
+          noHandlerFound(processedRequest, response);
+          return;
+      }
+  
+      //2、从Chain里拿出Handler（注意是Object类型哦~ ）然后找到属于它的适配器
+      HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
+      ...
+          //3、执行作用在此 Handler 上的所有拦截器的Pre方法
+          if (!mappedHandler.applyPreHandle(processedRequest, response)) {
+              return;
+          }
+      //4、真正执行 handle 方法（也就是你自己书写的逻辑方法），得到一个ModelAndView
+      mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+  
+      //5、视图渲染
+      applyDefaultViewName(processedRequest, mv);
+      //6、执行拦截器的post方法（可见它是视图渲染完成了才会执行的哦~）
+      mappedHandler.applyPostHandle(processedRequest, response, mv);
+      ...
+      //7、执行拦截器的afterCompletion方法（不管抛出与否）
+  }
+  ```
+
+  URL -->(获得) Handler -->(获得) HandlerAdapter ->(执行，将 request/response 转换为 handler 需要的形式) Handler
 
 ## 行为型模式
 

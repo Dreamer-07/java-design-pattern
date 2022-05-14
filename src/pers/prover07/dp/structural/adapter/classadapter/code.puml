@@ -1,0 +1,21 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+interface IVoltage5V
+class Voltage220V
+class Phone
+class VoltageAdapter {
+    + get5V(): int
+}
+Phone -> VoltageAdapter::get5V
+note top on link #blue
+    通过其获取 5v 电压进行充电
+end note
+note right of VoltageAdapter::get5V
+    将 220(Voltage220V) 转换成 5v 电压返回
+end note
+
+VoltageAdapter --|> Voltage220V
+VoltageAdapter ..|> IVoltage5V
+
+@enduml
