@@ -2805,6 +2805,12 @@ public class Demo {
 - 主要分为三类：类适配器/接口适配器/对象适配器
 - 工作原理：通过适配器类，让原本直接调用的类转换成合适的接口后再使用
 
+#### 结构
+
+- 目标接口(Target)： 当前系统业务所需要的接口，它可以是抽象类或接口
+- 适配者类(Adaptee)：被访问/适配的现存组件库的组件接口(也就是需要适配的类)
+- 适配器类(Adapter)：转换器，通过继承/引用适配者类的对象，将适配器转换成目标接口，让用户按照目标接口的格式访问适配者
+
 #### 类适配器
 
 核心：直接继承被被适配的类(看不懂没事先往下看)
@@ -3015,6 +3021,11 @@ public class Demo {
 - JDK1.8 更新了 `default` 关键字，解决接口适配器这一模式
 - 接口适配器和前面两种关联性不大
 
+#### 应用场景
+
+- 以前开发的系统存在满足新系统需求的类，但其接口同新系统接口不一致
+- 使用第三方提供的组件，但组件接口定义和自己要求的接口定义不同
+
 #### SpringMVC 源码
 
 > 参考文档：https://cloud.tencent.com/developer/article/1516403
@@ -3078,10 +3089,217 @@ public class Demo {
 
   URL -->(获得) Handler -->(获得) HandlerAdapter ->(执行，将 request/response 转换为 handler 需要的形式) Handler
 
+### 装饰者模式
 
+#### 简介
 
-### 桥接模式
+不改变现有对象结构的情况下，动态地给该对象增加一些职责(即增加额外功能)的模式
+
+> 不理解没关系，看完代码就到了
+
+#### 结构
+
+- 抽象构件(Component): 定义一个 抽象类/接口 以 **规范准备接收附加责任** 的对象
+- 具体构件(Concrete Component)：实现抽象构件，通过 **装饰角色** 为其添加一些职责
+- 抽象装饰(Decorator)：继承/实现抽象构件，并**包含具体构件的实例**，可以通过其子类(具体装饰)扩展具体构件的功能
+- 具体装饰(Concrete Decorator)：实现抽象装饰，并给具体构件对象添加职责
+
+#### 代码
+
+> 问题描述
+
+![image-20220514220244223](README.assets/image-20220514220244223.png)
+
+> UML 类图
+
+ ![image-20220514220159861](README.assets/image-20220514220159861.png)
+
+> 代码实现 
+
+1. 创建抽象构件
+
+   ```java
+   public abstract class Food {
+   
+       private String desc;
+       private float price;
+   
+       public Food() {
+       }
+   
+       public Food(String desc, float price) {
+           this.desc = desc;
+           this.price = price;
+       }
+   
+       public String getDesc() {
+           return desc;
+       }
+   
+       public void setDesc(String desc) {
+           this.desc = desc;
+       }
+   
+       public float getPrice() {
+           return price;
+       }
+   
+       public void setPrice(float price) {
+           this.price = price;
+       }
+   
+       /**
+        * 计算食物的价格
+        * @return
+        */
+       public float cost() {
+           return this.getPrice();
+       };
+   }
+   ```
+
+2. 定义抽象装饰：需要继承抽象构件，并定义一个抽象构件的属性，用来多层装饰
+
+   ```java
+   /**
+    * 抽象装饰 - 原料(定义配料的规范)
+    * - 也需要遵守抽象构件的规范，所以继承抽象构件
+    *
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/14 22:04
+    */
+   public abstract class Ingredients extends Food {
+   
+       /**
+        * 聚合抽象构件，方便对具体构件进行装饰
+        */
+       private Food food;
+   
+       public Ingredients(String desc, float price, Food food) {
+           super(desc, price);
+           this.food = food;
+       }
+   
+       @Override
+       public float cost() {
+           return super.getPrice() + food.cost();
+       }
+   
+       @Override
+       public String getDesc() {
+           return super.getDesc() + food.getDesc();
+       }
+   }
+   ```
+
+3. 定义具体构件 - 需要被装饰/包装的商品
+
+   ```java
+   public class FriedRice extends Food{
+   
+       public FriedRice() {
+           super("炒饭", 10);
+       }
+   
+   }
+   ```
+
+   ```java
+   public class FriedNoodles extends Food {
+   
+       public FriedNoodles() {
+           super("炒面", 8);
+       }
+   }
+   ```
+
+4. 定义具体装饰 - 用来包装/装饰商品的"配料"
+
+   ```java
+   public class Egg extends Ingredients {
+       public Egg(Food food) {
+           super("鸡蛋", 2, food);
+       }
+   }
+   ```
+
+   ```java
+   public class Ham extends Ingredients {
+       public Ham(Food food) {
+           super("火腿", 2, food);
+       }
+   }
+   ```
+
+5. 使用
+
+   ```java
+   public static void main(String[] args) {
+       Food food;
+       food = new FriedRice();
+       printFood(food);
+       food = new Egg(food);
+       printFood(food);
+       food = new Ham(food);
+       printFood(food);
+   }
+   
+   private static void printFood(Food food) {
+       System.out.println(food.getDesc() + ":" + food.cost());
+   }
+   ```
+
+#### 好处
+
+- 装饰者模式可以带来比继承更加灵活性的扩展功能，使用更加方便，可以通过**组合不同装饰对象来获取不同行为状态的多样化的结果**；装饰着模式比继承具有更好的扩展性，完美的遵循开闭原则，继承是静态的附加责任，装饰着则是动态的附加责任
+- 装饰类和构件类可以独立发展，不会相互耦合，装饰模式是继承的一个替代模式，可以实现动态扩展一个实现类的功能
+
+#### 使用场景
+
+- 当**不能采用继承**的方式对系统进行扩充或**采用继承不利于**系统扩展和维护时
+
+  不能采用继承的情况有两种：
+
+  1. 系统中存在大量独立的扩展，为支持每一种组合将产生大量的子类，使得子类的数目呈爆炸性增长
+  2. 类定义不能继承(`final`类)
+
+- 在不影响其他对象的情况下，以 **动态，透明** 的方式给单个对象添加职责
+
+- 当对象的功能要求**可以动态地添加，也可以动态地撤销时**(新增/删除装饰类，没有影响)
+
+#### JDK 源码
+
+`BufferedWriter` 等 IO 流中的包装类
+
+![image-20220515105541519](README.assets/image-20220515105541519.png)
+
+**BufferedWriter** 类中聚合了 Writer 属性
+
+ ![image-20220515105615069](README.assets/image-20220515105615069.png)
+
+结论：BufferedWriter 使用装饰者模式对 Writer 子实现类进行了增强(添加了缓冲区，提高了写数据的效率)
+
+#### 代理和装饰者的区别
+
+- 相同点
+
+  - 都要实现与目标类相同的业务接口
+  - 在两个类中都要声明目标对象
+  - 都可以在不修改目标类的前提下增强目标方法
+
+- 不同点
+
+  - 目的不同
+
+    装饰者是为了增强目标对象
+
+    静态代理是为了保护和隐藏目标对象
+
+  - 获取目标对象构建的地方不同
+
+    装饰者模式：由外界传递进来，可以通过构造方法传递
+
+    静态代理：在代理类内部创建，以此类隐藏目标对象
 
 ## 行为型模式
-
-## 

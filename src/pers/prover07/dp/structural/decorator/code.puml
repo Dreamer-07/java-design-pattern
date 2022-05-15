@@ -1,0 +1,35 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class Food {
+    - desc: String
+    - price: float
+    + cost(): float
+}
+class FriedRice
+FriedRice --|> Food
+note right on link #blue
+    具体构件
+end note
+class FriedNoodles
+FriedNoodles --|> Food
+
+
+together {
+    abstract class Ingredients {
+        - food: Food
+    }
+    Ingredients --|> Food
+    Ingredients *.. Food
+    note right on link #blue
+        抽象装饰
+    end note
+    class Egg
+    Egg --|> Ingredients
+    class Ham
+    Ham --|> Ingredients
+    note right on link #blue
+        具体装饰
+    end note
+}
+@enduml
