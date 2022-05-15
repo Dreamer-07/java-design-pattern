@@ -3567,12 +3567,210 @@ public class Demo {
 
 这里更多的是为了保护 Request 中的方法，防止其被不合理的访问
 
+### 组合模式
 
+#### 简介
 
+- 传统的文件系统
 
+  ![image-20220515150732717](README.assets/image-20220515150732717.png)
 
+- 组合模式又称为部分整体模式，主要用于将**一组相似的对象当作一个单一的对象**；
 
+- 组合模式使用树型结构来表示部分以及整体层次
 
+#### 结构
 
+- 抽象根节点：定义系统各层次对象的共有方法和属性，可以预先定义一些默认行为和属性
+- 树枝节点：定义树枝节点的行为，存储子节点，组合树枝节点和叶子节点形成一个树形结构
+- 叶子节点：叶子节点对象，其下再无分支，是系统层次遍历的最小单位
 
-## 行为型模式
+#### 代码
+
+> 问题描述
+
+![image-20220515152715930](README.assets/image-20220515152715930.png)
+
+> UML 类图
+
+ ![image-20220515154101356](README.assets/image-20220515154101356.png)
+
+> 代码实现
+
+1. 创建 **MenuComponent** - 抽象根节点
+
+   ```java
+   /**
+    * 组合模式 - 菜单组件(抽象根节点)
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/15 15:36
+    */
+   public abstract class MenuComponent {
+   
+       protected String name;
+   
+       protected int level;
+   
+       /**
+        * 添加菜单组件(菜单项组件不支持)
+        * @param menuComponent
+        */
+       public void add(MenuComponent menuComponent) {
+           throw new UnsupportedOperationException();
+       }
+   
+       /**
+        * 删除菜单组件(菜单项组件不支持)
+        * @param menuComponent
+        */
+       public void remove(MenuComponent menuComponent) {
+           throw new UnsupportedOperationException();
+       }
+   
+       /**
+        * 查找菜单组件(菜单项组件不支持)
+        * @param index
+        */
+       public MenuComponent get(int index) {
+           throw new UnsupportedOperationException();
+       }
+   
+       public String getName() {
+           return name;
+       }
+   
+       public int getLevel() {
+           return level;
+       }
+   
+       /**
+        * 打印其包含的所有菜单以及菜单项名称
+        */
+       abstract void print();
+   }
+   ```
+
+2. 创建 **Menu** - 树枝节点
+
+   ```java
+   /**
+    * 组合模式 - 菜单类(树枝节点)
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/15 15:38
+    */
+   public class Menu extends MenuComponent{
+   
+       private List<MenuComponent> menuComplist = new ArrayList<>();
+   
+       public Menu(String name, int level) {
+           this.name = name;
+           this.level = level;
+       }
+   
+       @Override
+       public void add(MenuComponent menuComponent) {
+           menuComplist.add(menuComponent);
+       }
+   
+       @Override
+       public void remove(MenuComponent menuComponent) {
+           menuComplist.remove(menuComponent);
+       }
+   
+       @Override
+       public MenuComponent get(int index) {
+           return menuComplist.get(index);
+       }
+   
+       @Override
+       void print() {
+           for (int i = 0; i < level; i++) {
+               System.out.print("-");
+           }
+           System.out.println(this.getName());
+           menuComplist.forEach(MenuComponent::print);
+       }
+   }
+   ```
+
+3. 创建 MenuItem - 叶子节点
+
+   ```java
+   public class MenuItem extends MenuComponent{
+   
+       public MenuItem(String name, int level) {
+           this.name = name;
+           this.level = level;
+       }
+   
+       @Override
+       void print() {
+           for (int i = 0; i < level; i++) {
+               System.out.print("-");
+           }
+           System.out.println(this.getName());
+       }
+   }
+   ```
+
+4. 使用
+
+   ```java
+   public static void main(String[] args) {
+       MenuComponent menu1 = new Menu("菜单管理", 2);
+       menu1.add(new MenuItem("页面访问", 3));
+       menu1.add(new MenuItem("展开菜单", 3));
+       menu1.add(new MenuItem("编辑菜单", 3));
+       menu1.add(new MenuItem("删除菜单", 3));
+       MenuComponent menu2 = new Menu("权限配置", 2);
+       menu2.add(new MenuItem("页面访问", 3));
+       menu2.add(new MenuItem("提交保存", 3));
+   
+       MenuComponent root = new Menu("系统管理", 1);
+       root.add(menu1);
+       root.add(menu2);
+   
+       root.print();
+   }
+   ```
+
+#### 分类
+
+根据抽象构件类(抽象根节点)的定义形式，我们可将组合模式分为**透明组合模式和安全组合模式**两种形式
+
+- 透明组合模式：
+
+  - 在**抽象构件类**中定义管理成员对象的方法(add/remove/get等); 
+
+  - 同时也是组合模式的**标准形式**；
+
+  - 好处是确保所有构件类都有相同的接口
+
+    缺点是不够安全，因为叶子节点和树枝节点本质上还是有区别的，为叶子节点提供这些方法没用，运行阶段还可能报错
+
+- 安全组合模式：
+
+  - 在**树枝节点**中定义并实现管理成员对象的方法，而不是在抽象构件类中定义；
+
+  - 缺点是不够透明，因为叶子节点和树枝节点具有不同的方法，也没有在抽象构建类中定义，因此客户端无法完全针对抽象编程，必须有区别的对待叶子节点和树枝节点
+
+    ![image-20220515160004666](README.assets/image-20220515160004666.png)
+
+#### 优点及使用场景
+
+> 优点
+
+- 组合模式可以清楚地定义**分层次的复杂对象**，表示对象的全部/部分层次，让客户端忽略层次的差异，方便对整个层次结构进行控制
+- 客户端可以一致地使用一个 组合结构/其中的某个对象，不必关系处理的是单个对象还是整个组合结构，简化了客户端代码
+- 在组合模式中增加新的树枝节点和叶子节点都很方便，无须对现有类库进行任何修改，符合"开闭原则"
+- 组合模式为**树形结构的面向对象**提供了一种灵活的解决方案，通过叶子节点和树枝节点的递归组合，可以形成复杂的树型结构，但对树型结构的控制却非常简单
+
+> 使用场景
+
+![image-20220515160646411](README.assets/image-20220515160646411.png)
+
+## 行为型模
+
+## 式
