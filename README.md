@@ -3979,3 +3979,178 @@ System.out.println("x1==x2" + (x1 == x2)); // false
  ![image-20220515175635586](README.assets/image-20220515175635586.png)
 
 ## 行为型模式
+
+- 用于描述程序在运行时**复杂的流程控制**，即描述多个类/对象之间如何通过相互写作共同完成单个对象无法单独完成的任务(其中涉及到算法与对象间职责的分配)
+- 行为型模式又分为类行为模式/对象行为模式；前者采用继承机制，后者采用聚合/组合；所以后者比前者耦合度低，满足"合成复用原则"，所以后者比前者具有更大的灵活性
+
+### 模板方法模式
+
+#### 简介
+
+定义一个操作的算法骨架，可以将一些不确定的步骤延迟到子类中进行，使得子类可以不改变算法结构的情况下重新定义该算法的一个特定处理逻辑
+
+![image-20220515192329645](README.assets/image-20220515192329645.png)
+
+#### 结构
+
+- 抽象类：负责给出一个算法的轮廓和骨架，由 **一个模板方法** 和 **若干个基本方法** 构成
+  - 模板方法：定义了**算法的骨架**，按某种顺序调用其包含的基本方法
+  - 基本方法：实现算法各个步骤的方法，使模板方法的组成部分；基本方法又可以分为三种
+    - 抽象方法：由抽象类声明，由子类实现
+    - 具体方法：声明并实现的方法，子类也可以覆盖/直接继承
+    - 钩子方法：在抽象类中已经实现，一般是用于 判断的逻辑方法(boolean isXxx)/需要子类重写的空方法 两种
+- 具体子类：实现抽象类中定义的抽象方法，它们是一个顶级逻辑(模板方法)的组成步骤
+
+#### 代码
+
+> 问题描述
+
+![image-20220515193313921](README.assets/image-20220515193313921.png)
+
+倒蔬菜和倒调料品是抽象方法 
+
+> UML 类图
+
+ ![image-20220515195121569](README.assets/image-20220515195121569.png)
+
+> 代码实现
+
+1. 定义抽象类
+
+   ```java
+   /**
+    * 模板方法 - 抽象类
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/15 19:51
+    */
+   public abstract class dish {
+   
+       /**
+        * 模板方法,定义基本方法的执行步骤
+        */
+       public final void cookProces() {
+           this.pourOil();
+           this.heatOil();
+           this.pourVegetable();
+           this.pourSauce();
+           this.fry();
+       }
+   
+       // 第一步：倒油是一样的，直接实现
+       protected void pourOil() {
+           System.out.println("倒油");
+       }
+       // 第二步：热油是一样的，直接实现
+       protected void heatOil() {
+           System.out.println("热油");
+       }
+   
+       // 第三步：倒蔬菜是不一样的抽象方法
+       protected abstract void pourVegetable();
+       // 第四步：倒调味料是不一样，抽象方法
+       protected abstract void pourSauce();
+   
+       // 第五步：翻炒是一样的，直接实现
+       protected void fry() {
+           System.out.println("炒啊炒啊炒到熟啊");
+       }
+   
+   }
+   ```
+
+2. 定义实现子类 - 完成抽象类中定义的抽象方法
+
+   ```java
+   /**
+    * 实现子类
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/15 19:54
+    */
+   public class dishOne extends dish {
+       @Override
+       protected void pourVegetable() {
+           System.out.println("下锅的蔬菜是包菜");
+       }
+   
+       @Override
+       protected void pourSauce() {
+           System.out.println("下锅的酱料是辣椒");
+       }
+   }
+   ```
+
+   ```java
+   /**
+    * 实现子类
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/15 19:54
+    */
+   public class dishTwo extends dish {
+       @Override
+       protected void pourVegetable() {
+           System.out.println("下锅的蔬菜是菜心");
+       }
+   
+       @Override
+       protected void pourSauce() {
+           System.out.println("下锅的酱料是蒜蓉");
+       }
+   }
+   ```
+
+3. 使用
+
+   ```java
+   public static void main(String[] args) {
+       dish dishOne = new dishOne();
+       dishOne.cookProces();
+   }
+   ```
+
+#### 优缺点及适用场景
+
+> 优缺点
+
+- 优点：
+  - 提高代码的复用性：将相同部分的代码放在抽象的父类中，而将不同的代码放入不同的子类中
+  - 实现了反向控制： 通过一个父类调用其子类的操作，通过对子类的具体实现扩展不同的行为，实现了反向控制，并符合"开闭原则"
+- 缺点：
+  - 不同的实现都需要定义一个子类，会导致类的个数增加，系统庞大，设计抽象
+  - 父类的抽象方法由子类实现，子类执行的结果会影响父类的结果，这导致了一种反向的控制结构，提高了代码阅读的难度
+
+> 适用场景
+
+- 算法的整体步骤很固定，但其中个别部分易变(具体方法，抽象方法)
+- 需要通过**子类来决定父类算法中的某个步骤是否执行**，实现子类对父类的反向控制(利用钩子方法)
+
+#### JDK源码
+
+`InputStream` - 抽象类
+
+```java
+public abstract class InputStream implements Closeable {
+    // 抽象方法，由子类实现
+    public abstract int read() throws IOException;
+
+    public int read(byte b[]) throws IOException {
+        return read(b, 0, b.length);
+    }
+
+    public int read(byte b[], int off, int len) throws IOException {
+        if (b == null) {
+            throw new NullPointerException();
+        } else if (off < 0 || len < 0 || len > b.length - off) {
+            throw new IndexOutOfBoundsException();
+        } else if (len == 0) {
+            return 0;
+        }
+        // 调用子类的实现的 无参read() 抽象方法
+        int c = read();
+        ...
+    }
+}
+```
+

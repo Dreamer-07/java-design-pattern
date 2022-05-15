@@ -1,0 +1,32 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class dish {
+    + final cookProcess(): void
+    # pourOil(): void
+    # heatOil(): void
+    # {abstract} pourVegetable(): void
+    # {abstract} pourSauce(): void
+    # fry(): void
+}
+note left of dish::cookProcess {
+    模板方法
+}
+note right of dish::pourSauce {
+    (pourVegetable,pourSauce)基本方法 - 抽象方法
+}
+
+class dishOne {
+    # pourVegetable(): void
+    # pourSauce(): void
+}
+
+class dishTwo {
+    # pourVegetable(): void
+    # pourSauce(): void
+}
+
+dishOne -up-|> dish
+dishTwo -up-|> dish
+
+@enduml
