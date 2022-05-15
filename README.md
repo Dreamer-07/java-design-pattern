@@ -3771,6 +3771,211 @@ public class Demo {
 
 ![image-20220515160646411](README.assets/image-20220515160646411.png)
 
-## 行为型模
+### 享元模式
 
-## 式
+#### 简介
+
+运用共享技术来有效地支持大量细粒度对象的复用，它通过共享以及存在的对象来大幅度减少需要场景的对象数量，避免大量相似对象的开销，从而提高系统资源的利用率
+
+#### 结构
+
+> 享元模式的状态
+
+- 内部状态：即不会随着环境的改变而改变的可共享部分
+- 外部状态：指随环境改变而改变的不可以共享的部分，享元模式的实现要领就是 **区分应用中的这两种状态，并将外部状态外部化**
+
+> 角色
+
+- 抽象享元：接口/抽象类，在抽象类中声明了**具体享元类**公共的方法，这些方法可以**向外界提供享元对象的内部数据**(内部状态)，同时也可以**通过这个方法来设置外部数据**(外部状态)
+- 具体享元角色：实现了抽象享元类，称为享元对象；在具体享元类中**为内部状态提供了存储空间**，通常我们可以**结合单例模式来设计具体享元类，为每一个具体享元类提供唯一的享元对象**
+- 非享元角色：并不是所有抽象享元类的子类都需要被共享，**不能被共享的子类可设计为非共享的具体享元类**(外部状态集合)；当需要一个非共享具体享元类时可以直接通过实例化创建
+- 享元工厂角色：负责**创建和管理享元角色**，当客户对象请求一个享元对象时，享元工厂检查系统中是否存在符合要求的享元对象，如果存在则提供给客户，如果不存在的话，则创建一个新的享元对象
+
+#### 代码
+
+> 问题描述
+
+![image-20220515163158504](README.assets/image-20220515163158504.png)
+
+> 类图
+
+ ![image-20220515172449398](README.assets/image-20220515172449398.png)
+
+> 代码实现
+
+1. 创建非享元角色 - 保存外部状态
+
+   ```java
+   public class UnShardBox {
+   
+       private String color;
+   
+       private int angle;
+   
+       public UnShardBox() {
+       }
+   
+       public UnShardBox(String color, int angle) {
+           this.color = color;
+           this.angle = angle;
+       }
+   
+       public String getColor() {
+           return color;
+       }
+   
+       public void setColor(String color) {
+           this.color = color;
+       }
+   
+       public int getAngle() {
+           return angle;
+       }
+   
+       public void setAngle(int angle) {
+           this.angle = angle;
+       }
+   }
+   ```
+
+2. 创建享元抽象类 - 定义公共方法/属性
+
+   ```java
+   public abstract class AbstractBox {
+   
+       protected String shape;
+   
+       public void drawBox(UnShardBox state) {
+           System.out.printf("颜色为%s,角度为%s度的%s形状%n", state.getColor(), state.getAngle(), this.shape);
+       }
+   
+   }
+   ```
+
+3. 定义具体享元类(可以配合单例模式) - 保存内部状态
+
+   ```java
+   public class IBox extends AbstractBox {
+   
+       private IBox() {
+           this.shape = "I";
+       }
+   
+       public static IBox getInstance() {
+           return IBoxEnum.INSTANCE.get();
+       }
+   
+       private enum IBoxEnum {
+           /**
+            *
+            */
+           INSTANCE;
+   
+           private final IBox iBox;
+   
+           IBoxEnum() {
+               iBox = new IBox();
+           }
+   
+           public IBox get() {
+               return iBox;
+           }
+       }
+   }
+   ```
+
+   这个类懒得写了，开摆
+
+   ```java
+   public class LBox extends AbstractBox {
+   
+       public LBox() {
+           this.shape = "l";
+       }
+   
+   }
+   ```
+
+4. 创建享元工厂
+
+   ```java
+   public class BoxFactory {
+   
+       private static Map<String, AbstractBox> boxMap = new HashMap<>();
+   
+       static {
+           boxMap.put("I", IBox.getInstance());
+           boxMap.put("L", new LBox());
+       }
+   
+       public static AbstractBox getBox(String type) {
+           return boxMap.get(type);
+       }
+   }
+   ```
+
+5. 使用
+
+   ```java
+   public class Client {
+   
+       public static void main(String[] args) {
+           AbstractBox IBox = BoxFactory.getBox("I");
+           IBox.drawBox(new UnShardBox("红色", 90));
+       }
+   
+   }
+   ```
+
+#### 优缺点和使用场景
+
+> 优缺点
+
+- 优点
+  - 极大减少了内存中相似或相同属性的对象数量，节省系统资源，提高系统性能
+  - 享元模式的外部状态相对独立，且不影响内部状态
+- 缺点：为了使对象可以享元，需要将享元对象的部分状态外部化，分离内部状态和外部状态，使**程序逻辑复杂**
+
+> 使用场景
+
+- 一个系统有大量相同/相似的对象，造成内存的大量耗费
+- 对象的大部分都可以外部化，可以将这些外部状态传入对象中
+- 在使用享元模式时需要维护一个存储享元对象的享元池，也需要耗费一定的系统资源，因此，应当在需要多次重复使用享元对象才值得使用享元模式
+
+#### JDK 源码
+
+其实享元模式的实现最经典的实现就是**池技术**，例如：String常量池、数据库连接池、缓冲池等
+
+而 `Integer.valueOf()` 中也使用了
+
+```java
+Integer x = 127; // 得到 x实例，类型 Integer ==> Integer.valueOf(127)
+Integer y = new Integer(127); // 得到 y 实例，类型 Integer
+Integer z = Integer.valueOf(127);//..
+Integer w = new Integer(127);
+
+System.out.println(x.equals(y)); // 大小，true
+System.out.println(x == y); //  false
+System.out.println(x == z); // true
+System.out.println(w == x); // false
+System.out.println(w == y); // false
+
+
+Integer x1 = Integer.valueOf(200);
+Integer x2 = Integer.valueOf(200);
+System.out.println("x1==x2" + (x1 == x2)); // false
+```
+
+![image-20220515174859503](README.assets/image-20220515174859503.png)
+
+![image-20220515175126053](README.assets/image-20220515175126053.png)
+
+通过上述代码可以得知：内部使用了一个数组对 Integr 对象进行了缓存，valueOf(i) 的值 `大于-128小于127` 时会直接返回缓存的值
+
+#### 补充
+
+> https://refactoringguru.cn/design-patterns/flyweight
+
+ ![image-20220515175635586](README.assets/image-20220515175635586.png)
+
+## 行为型模式
