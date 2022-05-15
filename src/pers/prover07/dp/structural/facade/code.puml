@@ -1,0 +1,30 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class TV {
+    + on(): void
+    + off(): void
+}
+class Light {
+    + on(): void
+    + off(): void
+}
+class AirCondition {
+    + on(): void
+    + off(): void
+}
+
+class ApplicationFacade {
+    - tv: TV
+    - light: Light
+    - airCondition: AirCondition
+    + say(message: String): void
+    - on(): void
+    - off(): void
+}
+TV --o ApplicationFacade
+Light --o ApplicationFacade
+AirCondition --o ApplicationFacade
+class Client
+Client .> ApplicationFacade
+@enduml

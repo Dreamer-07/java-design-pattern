@@ -3430,4 +3430,149 @@ public class Demo {
 - 当一个系统不希望使用 继承/因为多层次继承导致类的个数急剧增加时
 - 当一个系统需要在构件的抽象化角色和具体化角色之间增加更多的灵活性时，避免在两个层次之间建立**静态的继承联系**，通过桥接模式可以使它们在**抽象层建立一个关联关系**
 
+### 外观模式
+
+#### 简介
+
+- 又称为门面模式，是一种通过为多个复杂的**子系统提供一个一致的接口**，而使这些子系统更加容易被访问的模式
+
+- 该模式对外有一个统一接口，外部应用不用关系内部子系统的具体的细节，大大降低了应用程序的复杂度，提高了程序的可维护性
+
+- 外观模式是**迪米特法则**的典型应用 ![image-20220515141444265](README.assets/image-20220515141444265.png)
+
+- 可以参考我们平日里购买的基金：
+
+  ![image-20220515141516301](README.assets/image-20220515141516301.png)
+
+#### 结构
+
+- 外观系统(Facade)：为多个子系统对外提供一个共同的接口
+- 子系统：实现系统的部分功能，客户可以通过外观角色访问它
+
+#### 代码
+
+> 问题描述
+
+ ![image-20220515142002484](README.assets/image-20220515142002484.png)
+
+> UML 类图
+
+ ![image-20220515142552634](README.assets/image-20220515142552634.png)
+
+> 代码实现
+
+1. 创建 TV/Light/AirCondition 三个设备类
+
+   ```java
+   public class TV {
+   
+       public void on() {
+           System.out.println("TV.on...");
+       }
+   
+       public void off() {
+           System.out.println("TV.off...");
+       }
+   
+   }
+   ```
+
+2. 创建 ApplicationFacade - 外观系统
+
+   ```java
+   public class ApplicationFacade {
+   
+       private TV tv;
+   
+       private Light light;
+   
+       private AirCondition airCondition;
+   
+       public ApplicationFacade() {
+           tv = new TV();
+           light = new Light();
+           airCondition = new AirCondition();
+       }
+   
+       public ApplicationFacade(TV tv, Light light, AirCondition airCondition) {
+           this.tv = tv;
+           this.light = light;
+           this.airCondition = airCondition;
+       }
+   
+       /**
+        * 对外暴漏方法，内部自定义逻辑实现调用子系统
+        * @param message
+        */
+       public void say(String message) {
+           if (message.contains("开启")) {
+               this.onAll();
+           } else if (message.contains("关闭")) {
+               this.offAll();
+           } else {
+               System.out.println("听不懂听不懂");
+           }
+       }
+   
+       private void onAll() {
+           tv.on();
+           light.on();
+           airCondition.on();
+       }
+   
+       private void offAll() {
+           tv.off();
+           light.off();
+           airCondition.off();
+       }
+   }
+   ```
+
+3. 使用
+
+   ```java
+   public static void main(String[] args) {
+       ApplicationFacade applicationFacade = new ApplicationFacade();
+       applicationFacade.say("开启");
+       applicationFacade.say("关闭");
+   }
+   ```
+
+#### 优缺点及使用场景
+
+> 优缺点
+
+- 优点
+  - 降低了子系统与客户端之间的耦合度，使得子系统的变化不会影响调用它的客户类
+  - 对客户屏蔽了子系统组件，减少了客户处理的对象数目，并使得系统使用起来更加容易
+- 缺点：不符合开闭原则，修改很麻烦
+
+> 使用场景
+
+- 对分层结构系统构件时，  使用外观模式定义系统中每层的入口点可以简化子系统之间的依赖关系
+- 当一个复杂系统的子系统很多时，外观模式可以为系统设计一个简单的接口供外界访问
+- 当客户端与多个子系统之间存在很大联系时，引入外观模式可以将它们分离，从而提高子系统的独立性和可移植性
+
+#### Tomcat 源码
+
+`RequestFacade`
+
+当我们接收客户端发送过来的请求时，tomcat 会将请求封装成 ServletRequest 对象，一般我们都会使用其子接口 HttpServletRequest
+
+ ![image-20220515144344273](README.assets/image-20220515144344273.png)
+
+而其底层的实现类是一个 **RequestFacade** 的对象
+
+ ![image-20220515144711708](README.assets/image-20220515144711708.png)
+
+这里更多的是为了保护 Request 中的方法，防止其被不合理的访问
+
+
+
+
+
+
+
+
+
 ## 行为型模式
