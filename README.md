@@ -4154,3 +4154,153 @@ public abstract class InputStream implements Closeable {
 }
 ```
 
+### 策略模式
+
+#### 定义
+
+- 该模式定义了一系列算法，并将每个算法封装起来，使它们可以**相互替换**，且算法的变化不会影响适用算法的客户
+- 策略模式属于**对象行为模式**，通过将算法进行封装，把适用算法的责任和算法的实现分割开来，并委托给不同对象对这些算法进行管理
+
+#### 结构
+
+- 抽象策略类：一个抽象角色(抽象类/接口)，此角色给出所有的具体策略类所需的接口
+- 具体策略类：实现了抽象策略定义的接口，提供具体的算法实现/行为
+- 环境类：持有一个策略类的引用，最终给客户端调用
+
+#### 代码
+
+> 问题描述
+
+![image-20220515205815702](README.assets/image-20220515205815702.png)
+
+> UML 类图
+
+ ![image-20220515224851147](README.assets/image-20220515224851147.png)
+
+> 代码实现
+
+1. 创建抽象策略类
+
+   ```java
+   /**
+    * 策略模式 - 抽象策略类
+    * 作用：定义具体策略类需要实现的方法接口规范
+    */
+   public interface Strategy {
+   
+       /**
+        * 显示策略信息
+        */
+       void show();
+   
+   }
+   ```
+
+2. 创建具体策略类
+
+   ```java
+   /**
+    * 策略模式 - 具体策略类
+    * 是一种具体策略算法的实现
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/15 22:49
+    */
+   public class StrategyA implements Strategy{
+       @Override
+       public void show() {
+           System.out.println("买一送一");
+       }
+   }
+   
+   public class StrategyB implements Strategy{
+       @Override
+       public void show() {
+           System.out.println("满100减20");
+       }
+   }
+   
+   public class StrategyC implements Strategy{
+       @Override
+       public void show() {
+           System.out.println("全场八折");
+       }
+   }
+   ```
+
+3. 创建**环境角色** - 这里对应的就是 **SalesMan(推销员)**
+
+   ```java
+   /**
+    * 策略模式 - 环境
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/15 22:50
+    */
+   public class SalesMan {
+   
+       /**
+        * 聚合抽象策略类
+        */
+       private Strategy strategy;
+   
+       public void setStrategy(Strategy strategy) {
+           this.strategy = strategy;
+       }
+   
+       public void salesManShow() {
+           strategy.show();
+       }
+   }
+   ```
+
+4. 使用
+
+   ```java
+   public class Client {
+   
+       public static void main(String[] args) {
+           SalesMan salesMan = new SalesMan();
+           salesMan.setStrategy(new StrategyA());
+           salesMan.salesManShow();
+       }
+   
+   }
+   ```
+
+#### 优缺点
+
+- 优点
+  - 策略类之间可以自由切换(都实现同一个接口)
+  - 易于扩展(增加一个新的策略，实现接口即可，不需要修改源代码，符合**开闭原则**)
+  - 避免多重选择语句(if else)，充分体现面向对象设计思想
+- 缺点
+  - 客户端必须知道所有的策略类，并自行决定要使用哪一个策略类
+  - 策略模式将造成很多策略类，可以通过使用**享元模式**在一定程度上减少对象的数量
+
+#### 使用场景
+
+- 一个系统需要动态地在几种算法中选择一种时，可将每个算法封装到策略类中
+- 一个类定义了多种行为，并且这些行为在这个类的操作中以多个条件语句的形式出现，可将每个分支移入它们各自的策略类中以代替这些条件语句
+- 系统中各算法彼此完全独立，且要求对客户隐藏具体算法实现细节时
+- 多个类的区别在于表现行为不同，可以使用策略模式，在运行时动态选择具体要执行的任务
+
+#### JDK 源码
+
+`Comparator` - 用来定义排序规则的
+
+```java
+public interface Comparator<T> {
+    int compare(T o1, T o2);
+    ...
+}
+```
+
+- Comparator 就是抽象策略类；其实现类就是具体策略类
+
+当我们需要进行排序时，例如使用 `Arrays.sort()` 时就可以传入对应的 **Comparator** 实现类按照指定的策略排序
+
+```java
+public static <T> void sort(T[] a, Comparator<? super T> c) {
+```
+
