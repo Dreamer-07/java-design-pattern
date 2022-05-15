@@ -1,0 +1,34 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class OperatingSystem {
+    # videoFile: VideoFile
+    + setVideoFile(videoFile: VideoFile): void
+    + play(): void
+}
+note top of OperatingSystem
+    抽象化角色(聚合实现化角色)
+end note
+class Windows
+OperatingSystem <|-- Windows
+note right on link #blue
+    扩展抽象化角色
+end note
+class Mac
+OperatingSystem <|-- Mac
+
+interface VideoFile {
+    + play(): void
+}
+note top of VideoFile
+    实现化角色
+end note
+OperatingSystem::videoFile o- VideoFile
+class AviVideoFile
+VideoFile <|.. AviVideoFile
+note right on link #blue
+    具体实现化角色
+end note
+class Mp4VideoFile
+VideoFile <|.. Mp4VideoFile
+@enduml

@@ -3302,4 +3302,132 @@ public class Demo {
 
     静态代理：在代理类内部创建，以此类隐藏目标对象
 
+### 桥接模式
+
+#### 简介
+
+将抽象和实现分类，使它们可以独立变化，用**组合关系代替继承关系**，从而降低抽象和实现这两个可变维度的耦合度
+
+#### 结构
+
+- 抽象化角色：抽象类，包含一个对**实现化对象**的引用
+- 扩展抽象化角色：抽象化角色的子类，实现**父类的业务方法**，并通过**组合关系调用实现化角色中的业务方法**
+- 实现化角色：接口，供**扩展抽象化角色**调用
+- 具体实现化角色：给出实现化角色具体实现
+
+#### 代码
+
+> 问题描述
+
+![image-20220515111623440](README.assets/image-20220515111623440.png)
+
+- 两个维度：操纵系统 & 视频格式
+- 当系统需要通过不同维度的配合实现某些业务时，就可以采用桥接模式(也可以用继承实现，但是会类爆炸且扩展性不高)
+
+> UML 类图
+
+ ![image-20220515113626916](README.assets/image-20220515113626916.png)
+
+感觉将 Video/System 互换身份影响也不大，只要符合桥接模式的规范即可
+
+> 代码实现
+
+1. 定义实现化角色 - VideoFile
+
+   ```java
+   public interface VideoFile {
+   
+       void play();
+   
+   }
+   ```
+
+2. 定义具体实现化角色 - 各种格式的视频
+
+   ```java
+   public class AviVideoFile implements VideoFile{
+       @Override
+       public void play() {
+           System.out.println("播放 avi 格式的视频...");
+       }
+   }
+   ```
+
+   ```java
+   public class Mp4VideoFile implements VideoFile{
+       @Override
+       public void play() {
+           System.out.println("播放 mp4 格式的视频...");
+       }
+   }
+   ```
+
+3. 定义抽象化角色 - OperatingSystem
+
+   ```java
+   public abstract class OperatingSystem {
+   
+       /**
+        * 聚合实现化角色
+        */
+       protected VideoFile videoFile;
+   
+       abstract void play();
+   
+   
+       public void setVideoFile(VideoFile videoFile) {
+           this.videoFile = videoFile;
+       }
+   }
+   ```
+
+4. 定义扩展抽象化角色 - 各种操作系统
+
+   ```java
+   public class Windows extends OperatingSystem{
+       @Override
+       void play() {
+           System.out.println("windows 环境准备...");
+           videoFile.play();
+       }
+   }
+   ```
+
+   ```java
+   public class Mac extends OperatingSystem{
+       @Override
+       void play() {
+           System.out.println("linux 环境准备...");
+           videoFile.play();
+       }
+   }
+   ```
+
+5. 使用
+
+   ```java
+   public static void main(String[] args) {
+       // 创建一个操作系统
+       Windows windows = new Windows();
+       // 设置要播放的视频格式
+       windows.setVideoFile(new Mp4VideoFile());
+       // 播放视频
+       windows.play();
+   }
+   ```
+
+#### 好处
+
+- 提供了系统的可扩充性，在两个变化维护中任意扩展一个维度，都不需要修改原有系统
+
+  例如：新增一个操作系统 Mac，只需要创建对应的类并继承**抽象化角色OperatingSystem**即可
+
+- 实现细节对客户**透明**(无论它的内部是如何实现的，它提供的对外接口是一致的，调用接口的人无需关心其内部实现原理)
+
+#### 使用场景
+
+- 当一个类需要存在两个独立变化的维度(System/Video)，且这两个维度都需要进行独立扩展时
+- 当一个系统不希望使用 继承/因为多层次继承导致类的个数急剧增加时
+- 当一个系统需要在构件的抽象化角色和具体化角色之间增加更多的灵活性时，避免在两个层次之间建立**静态的继承联系**，通过桥接模式可以使它们在**抽象层建立一个关联关系**
+
 ## 行为型模式
