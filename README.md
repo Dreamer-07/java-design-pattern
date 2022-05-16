@@ -4982,3 +4982,189 @@ SpringSecurity 也基于责任链实现的过滤器：TODO(SpringSecurity 源码
 - 当一个**对象的行为取决于它的状态**，并且它必须**在运行时根据状态改变它的行为**时，就可以考虑状态模式
 - 一个操作中含有庞大的分支结构，并且这些**分支决定于对象的状态**
 
+### 观察者模式
+
+#### 简介
+
+又称为发布-订阅(Publish/Subscribe)模式，它定义了一种多对多的依赖关系，可以实现让多个观察者同时监听某一个主题对象。当这个主题对象发生状态变化时，通知所有关联的观察者对象，是他们能自动更新自己
+
+#### 结构
+
+- 抽象主题(Subject)：抽象类/接口，可以定义一个属性将所有观察者对象保存到一个集合内，也可以增加和删除观察者
+- 具体主题(Concete Subject)：实现抽象主题，当具体主题内部状态发生变化时，给所有注册过的观察者发送通知
+- 抽象观察者(Observer)：观察者的抽象类，定义一个更新接口，使得在得到主题更改的通知时更新自己
+- 具体观察者(Concrete Observer): 实现抽象观察者的接口，在得到主题更改后进行相关业务操作(更新自身状态)
+
+#### 代码
+
+> 问题描述
+
+![image-20220516142717950](README.assets/image-20220516142717950.png)
+
+> UML 类图
+
+ ![image-20220516144317294](README.assets/image-20220516144317294.png)
+
+> 代码实现
+
+1. 定义Observer - 抽象观察者
+
+   ```java
+   /**
+    * 观察者模式 - 抽象观察者
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 14:40
+    */
+   public abstract class Observer {
+   
+       abstract void update(String message);
+   
+   }
+   ```
+
+2. 定义 WxUser - 具体观察者
+
+   ```java
+   /**
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 14:41
+    */
+   public class WxUser extends Observer{
+   
+       private String name;
+   
+       public WxUser(String name) {
+           this.name = name;
+       }
+   
+       @Override
+       void update(String message) {
+           System.out.println(name + "接收到了消息:" + message);
+       }
+   }
+   ```
+
+3. 定义 Subject - 抽象主题
+
+   ```java
+   public interface Subject {
+   
+       void attach(Observer observer);
+   
+       void detach(Observer observer);
+   
+       void notify(String message);
+   
+   }
+   ```
+
+4. 定义 TestSubject - 具体主题
+
+   ```java
+   /**
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 14:44
+    */
+   public class TestSubject implements Subject{
+   
+       private List<Observer> observerList = new ArrayList<>();
+   
+       @Override
+       public void attach(Observer observer) {
+           observerList.add(observer);
+       }
+   
+       @Override
+       public void detach(Observer observer) {
+           observerList.add(observer);
+       }
+   
+       @Override
+       public void notify(String message) {
+           observerList.forEach(observer -> observer.update(message));
+       }
+   }
+   ```
+
+5. 使用
+
+   ```java
+   public static void main(String[] args) {
+       TestSubject testSubject = new TestSubject();
+       testSubject.attach(new WxUser("张三"));
+       testSubject.attach(new WxUser("李四"));
+       testSubject.notify("new message");
+   }
+   ```
+
+#### 优缺点
+
+- 优点
+  - 降低了目标与观察者之间的耦合关系，在观察者模式中两者是**抽象耦合关系**
+  - 被观察者(主题)发送通知，所有注册的观察者都会受到信息(可以实现广播机制)
+- 缺点
+  - 观察者多时，排在后面的观察者可能需要一段时间才能受到通知
+  - 一定要避免被观察者(主题)产生**循环依赖**
+
+#### 使用场景
+
+- 对象间存在**一对多关系**，且**一个对象的状态发生改变会影响其他状态**
+- 当一个抽象模型有两个方面，且其中一个方面依赖于另一方面时
+
+#### JDK 源码
+
+`java.util.Observable`(主题) & `java.util.Observer`(观察者)
+
+```java
+// 主题类
+public class Observable {
+    private boolean changed = false;
+    // 类似于 List，用来保存 Observer
+    private Vector<Observer> obs;
+
+    public Observable() {
+        obs = new Vector<>();
+    }
+    // 添加新的观察者
+    public synchronized void addObserver(Observer o) {
+        if (o == null)
+            throw new NullPointerException();
+        if (!obs.contains(o)) {
+            obs.addElement(o);
+        }
+    }
+    // 删除已用的观察者
+    public synchronized void deleteObserver(Observer o) {
+        obs.removeElement(o);
+    }
+    
+    public void notifyObservers() {
+        notifyObservers(null);
+    }
+    
+    // 通知所有观察者
+    public void notifyObservers(Object arg) {
+        Object[] arrLocal;
+
+        synchronized (this) {
+            // 设置一个标志位changed用来判断是否更新了
+            if (!changed)
+                return;
+            arrLocal = obs.toArray();
+            clearChanged();
+        }
+        // 按照观察者添加的顺序，从后往前发送通知
+        for (int i = arrLocal.length-1; i>=0; i--)
+            ((Observer)arrLocal[i]).update(this, arg);
+    }
+
+    protected synchronized void setChanged() {
+        changed = true;
+    }
+}
+```
+
+**Observer** 是一个抽象观察者接口，可以监视目标对象的变化，当受到通知时会调用其 `update()` 方法，进行相应的业务处理

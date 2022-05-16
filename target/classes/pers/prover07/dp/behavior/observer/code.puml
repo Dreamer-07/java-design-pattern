@@ -1,0 +1,29 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+interface Subject {
+    + {abstract} attach(observer: Observer): void
+    + {abstract} detach(observer: Observer): void
+    + {abstract} notify(message: String): void
+}
+class TestSubject {
+    - observerList: List<Observer>
+    + attach(observer: Observer): void
+    + detach(observer: Observer): void
+    + notify(message: String): void
+}
+TestSubject .up.|> Subject
+
+abstract class Observer {
+    + {abstract} update(message: String): void
+}
+class WxUser {
+    - name: String
+    + WxUser(name: String)
+    + update(message: String): void
+}
+WxUser -up-|> Observer
+
+Observer -right-o Subject
+
+@enduml
