@@ -1,0 +1,51 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class Lift {
+    - liftState: LiftState
+    + Lift()
+    + setLiftState(liftState: LiftState)
+    + open(): void
+    + stop(): void
+    + run(): void
+    + close(): void
+}
+Lift -down-o LiftState
+abstract class LiftState {
+    - lift: Lift
+    + LiftState(lift: Lift)
+    + {abstract} open(): void
+    + {abstract} stop(): void
+    + {abstract} run(): void
+    + {abstract} close(): void
+}
+LiftState -up-o Lift
+class LiftOpenState {
+    + open(): void
+    + stop(): void
+    + run(): void
+    + close(): void
+}
+LiftOpenState -up-|> LiftState
+class LiftStopState {
+    + open(): void
+    + stop(): void
+    + run(): void
+    + close(): void
+}
+LiftStopState -up-|> LiftState
+class LiftRunState {
+    + open(): void
+    + stop(): void
+    + run(): void
+    + close(): void
+}
+LiftRunState -up-|> LiftState
+class LiftCloseState {
+    + open(): void
+    + stop(): void
+    + run(): void
+    + close(): void
+}
+LiftCloseState -up-|> LiftState
+@enduml

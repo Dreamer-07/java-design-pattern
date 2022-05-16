@@ -4738,3 +4738,247 @@ public interface FilterChain {
 网上的大佬参考源码后做了一个简单版本的过滤机制: https://www.cnblogs.com/TheGCC/p/14172799.html
 
 SpringSecurity 也基于责任链实现的过滤器：TODO(SpringSecurity 源码分析)
+
+### 状态模式
+
+#### 简介
+
+- 状态模式与[有限状态机](https://zhuanlan.zhihu.com/p/461094908)相关
+
+  > 简单理解：一个对象只有固定的n个状态，且不同状态间的行为不同
+
+- 对于有状态的对象，可以将不同状态抽取成不同的对象(类)，允许状态对象在其内部状态发生改变时改变其行为
+
+#### 结构
+
+- 环境角色：也称上下文，定义了客户程序要的接口，维护一个当前状态，并将状态相关的操作委托给当前状态来处理(例如电梯类)
+- 抽象状态角色：定义一个接口，用来封装**环境对象中特定状态所对应的行为**(定义电梯的行为)
+- 具体状态角色：实现抽象状态所对应的行为(实现不同状态下的电梯行为)
+
+#### 实现
+
+> 问题描述
+
+![image-20220516133124591](README.assets/image-20220516133124591.png)
+
+> UML 类图
+
+ ![image-20220516133106809](README.assets/image-20220516133106809.png)
+
+> 代码实现
+
+1. 创建 LiftState - 抽象状态角色
+
+   ```java
+   /**
+    * 状态模式 - 抽象状态类
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 13:33
+    */
+   public abstract class LiftState {
+   
+       protected Lift lift;
+   
+       public LiftState(Lift lift) {
+           this.lift = lift;
+       }
+   
+       abstract void open();
+   
+       abstract void run();
+   
+       abstract void close();
+   
+       abstract void stop();
+   
+   }
+   ```
+
+2. 创建 Lift - 环境类
+
+   ```java
+   /**
+    * 状态模式 - 环境类 
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 13:31
+    */
+   public class Lift {
+   
+       private LiftState liftState;
+   
+       public Lift() {
+           liftState = new LiftCloseState(this);
+       }
+   
+       public void setLiftState(LiftState liftState) {
+           this.liftState = liftState;
+       }
+   
+       /**
+        * 将状态相关的操作委托给当前状态来处理
+        */
+       public void open() {
+           liftState.open();
+       }
+   
+       public void close() {
+           liftState.close();
+       }
+   
+       public void run() {
+           liftState.run();
+       }
+   
+       public void stop() {
+           liftState.stop();
+       }
+   }
+   ```
+
+3. 创建各种 LiftState - 具体状态类
+
+   ```java
+   /**
+    * 状态模式 - 具体状态类
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 13:36
+    */
+   public class LiftCloseState extends LiftState{
+       public LiftCloseState(Lift lift) {
+           super(lift);
+       }
+   
+       @Override
+       void open() {
+           this.lift.setLiftState(new LiftOpenState(this.lift));
+       }
+   
+       @Override
+       void run() {
+           this.lift.setLiftState(new LiftRunState(this.lift));
+       }
+   
+       @Override
+       void close() {
+           System.out.println("closed...");
+       }
+   
+       @Override
+       void stop() {
+           this.lift.setLiftState(new LiftStopState(this.lift));
+       }
+   }
+   ```
+
+   ```java
+   public class LiftOpenState extends LiftState{
+       public LiftOpenState(Lift lift) {
+           super(lift);
+       }
+   
+       @Override
+       void open() {
+           System.out.println("opened...");
+       }
+   
+       @Override
+       void run() {
+           this.lift.setLiftState(new LiftRunState(this.lift));
+       }
+   
+       @Override
+       void close() {
+           this.lift.setLiftState(new LiftCloseState(this.lift));
+       }
+   
+       @Override
+       void stop() {
+           System.out.println("please close first...");
+       }
+   }
+   ```
+
+   ```java
+   public class LiftRunState extends LiftState{
+       public LiftRunState(Lift lift) {
+           super(lift);
+       }
+   
+       @Override
+       void open() {
+           this.lift.setLiftState(new LiftOpenState(this.lift));
+       }
+   
+       @Override
+       void run() {
+           System.out.println("runing...");
+       }
+   
+       @Override
+       void close() {
+           this.lift.setLiftState(new LiftCloseState(this.lift));
+       }
+   
+       @Override
+       void stop() {
+           System.out.println("please close first...");
+       }
+   }
+   ```
+
+   ```java
+   public class LiftStopState extends LiftState{
+       public LiftStopState(Lift lift) {
+           super(lift);
+       }
+   
+       @Override
+       void open() {
+           this.lift.setLiftState(new LiftOpenState(this.lift));
+       }
+   
+       @Override
+       void run() {
+           this.lift.setLiftState(new LiftRunState(this.lift));
+       }
+   
+       @Override
+       void close() {
+           this.lift.setLiftState(new LiftCloseState(this.lift));
+       }
+   
+       @Override
+       void stop() {
+           System.out.println("stoped...");
+       }
+   }
+   ```
+
+4. 使用
+
+   ```java
+   public static void main(String[] args) {
+       Lift lift = new Lift();
+       lift.run();
+       lift.stop();
+   }
+   ```
+
+#### 优缺点
+
+- 优点
+  - 将所有与状态有关的行为放到一个类中，并且可以方便地增加新的状态，只需要改变对象状态即可改变对象的行为
+  - 允许状态转换逻辑与状态对象合成一体，而不是某一个巨大的条件语句块
+- 缺点
+  - 状态模式的使用必然会增加系统类和对象的格式
+  - 状态模式的结构与实现都较为复杂，如果使用不当会导致程序和代码的混乱
+  - 状态模式对 ”开闭原则“ 的支持不太好
+
+#### 使用场景
+
+- 当一个**对象的行为取决于它的状态**，并且它必须**在运行时根据状态改变它的行为**时，就可以考虑状态模式
+- 一个操作中含有庞大的分支结构，并且这些**分支决定于对象的状态**
+
