@@ -1,0 +1,29 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+abstract class Mediator {
+    + {abstract} notify(message: String, receiver: Person): void
+}
+class HouseMediator {
+    - tenantList: List<Person>
+    - HomeownerList: List<Person>
+    + notify(message: String, receiver: Person): void
+    + notifyHomeowner(message: String, person: Person): void
+    + notifyTenant(message: String, person: Person): void
+}
+HouseMediator -up-|> Mediator
+
+abstract class Person {
+    - name: String
+    - mediator: Mediator
+    + {abstract} notify(message: String): void
+}
+class Tenant
+Tenant -up-|> Person
+class Homeowner
+Homeowner -up-|> Person
+
+Person -right-o Mediator
+Mediator -left-o Person
+
+@enduml

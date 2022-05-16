@@ -5154,13 +5154,14 @@ public class Observable {
             if (!changed)
                 return;
             arrLocal = obs.toArray();
+            // 清空标志位，表示已经更新了
             clearChanged();
         }
         // 按照观察者添加的顺序，从后往前发送通知
         for (int i = arrLocal.length-1; i>=0; i--)
             ((Observer)arrLocal[i]).update(this, arg);
     }
-
+	// 设置标志位，表示状态被更新
     protected synchronized void setChanged() {
         changed = true;
     }
@@ -5168,3 +5169,170 @@ public class Observable {
 ```
 
 **Observer** 是一个抽象观察者接口，可以监视目标对象的变化，当受到通知时会调用其 `update()` 方法，进行相应的业务处理
+
+### 中介模式
+
+#### 简介
+
+- 又称为调停模式，可以定义一个**中介角色**来封装一系列对象之间的交互，使原有对象之间的耦合松散，且可以独立地改变它们之间地交互
+
+- 一个好的设计，必定不会把所有的对象关系处理封装到本垒中，而是使用一个专门的类来管理那些不属于自己的行为
+
+  ![image-20220516151348592](README.assets/image-20220516151348592.png)
+
+#### 结构
+
+- 抽象中介者：提供了**同时对象注册**与**转发同事对象信息**的抽象方法
+- 具体中介者：实现了中介者接口，使用一个 List 来管理**同事角色**，协调各个**同事角色之间的交互关系**，因此它依赖于同事角色
+- 抽象同事类：定义同事类的接口，**保存中介者对象**，提供**同事对象交互的抽象方法**，实现所有相互影响的同事类的公共功能
+- 具体同事类：抽象同事类的实现者，当需要于其他同事交互时，由**中介者对象负责后续的交互**
+
+#### 代码实现
+
+> 问题描述
+
+![image-20220516151938030](README.assets/image-20220516151938030.png)
+
+> UML 类图
+
+ ![image-20220516153848223](README.assets/image-20220516153848223.png)
+
+> 代码实现
+
+1. 创建 Mediator - 抽象中介者
+
+   ```java
+   /**
+    * 中介模式 - 抽象中介者
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 15:39
+    */
+   public abstract class Mediator {
+   
+       abstract void notify(String message, Person person);
+   
+   }
+   ```
+
+2. 创建 Person - 抽象同事类
+
+   ```java
+   public abstract class Person {
+   
+       protected String name;
+       protected Mediator mediator;
+   
+       public Person(String name, Mediator mediator) {
+           this.name = name;
+           this.mediator = mediator;
+       }
+   
+       abstract void notify(String message);
+   
+       // 相互影响的同事类的公共功能
+       public void getMessage(String message) {
+           System.out.println(this.name + "受到消息:" + message);
+       };
+   
+       public String getName() {
+           return name;
+       }
+   }
+   ```
+
+3. 创建 HoueMediator - 具体中介者
+
+   ```java
+   public class HouseMediator extends Mediator{
+   
+       private List<Person> tenantList;
+       private List<Person> homeownerList;
+   
+       public HouseMediator() {
+           tenantList = new ArrayList<>();
+           homeownerList = new ArrayList<>();
+       }
+   
+       @Override
+       void notify(String message, Person receiver) {
+           receiver.getMessage(message);
+       }
+   
+       public void notifyHomeowner(String message, Person person) {
+           System.out.println(person.getName() + "发出租房消息:" + message);
+           homeownerList.forEach(homeowner -> notify(message, homeowner));
+       }
+   
+       public void notifyTenant(String message, Person person) {
+           System.out.println(person.getName() + "发出房子消息:" + message);
+           tenantList.forEach(tenant -> notify(message, tenant));
+       }
+   
+       public List<Person> getTenantList() {
+           return tenantList;
+       }
+   
+       public List<Person> getHomeownerList() {
+           return homeownerList;
+       }
+   }
+   ```
+
+4. 创建 Tenant&Homeowner - 具体同事类
+
+   ```java
+   public class Homeowner extends Person {
+       public Homeowner(String name, HouseMediator houseMediator) {
+           super(name, houseMediator);
+       }
+   
+       @Override
+       void notify(String message) {
+           ((HouseMediator) mediator).notifyTenant(message, this);
+       }
+   }
+   ```
+
+   ```java
+   public class Tenant extends Person {
+       public Tenant(String name, HouseMediator houseMediator) {
+           super(name, houseMediator);
+       }
+   
+       @Override
+       void notify(String message) {
+           ((HouseMediator) mediator).notifyHomeowner(message, this);
+       }
+   }
+   ```
+
+5. 使用
+
+   ```java
+   public static void main(String[] args) {
+       HouseMediator houseMediator = new HouseMediator();
+   
+       Tenant tenant1 = new Tenant("张三", houseMediator);
+       Tenant tenant2 = new Tenant("李四", houseMediator);
+       Homeowner homeowner = new Homeowner("王五", houseMediator);
+   
+       houseMediator.getTenantList().add(tenant1);
+       houseMediator.getTenantList().add(tenant2);
+       houseMediator.getHomeownerList().add(homeowner);
+   
+       // tenant1.notify("我要个三房的整租");
+       homeowner.notify("有个二房的房子");
+   }
+   ```
+
+#### 优缺点
+
+- 优点
+  - 松散耦合：该**模式将多个同事对象封装到中介者对象**中，从而使得同事对象之间松散耦合
+  - 集中控制交互：多个同事对象的交互，可以被封装到中介者对象里面集中管理，使得这些交互行为发生变化时，只需要修改中介者对象即可
+- 缺点：同事类多起来后，中介者的职责将变大，也会变得复杂而庞大，系统的可维护性降低
+
+#### 使用场景
+
+- 系统中对象之间**存在复杂的引用关系**，系统结构混乱且难以理解
