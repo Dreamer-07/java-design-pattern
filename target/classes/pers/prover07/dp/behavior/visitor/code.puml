@@ -1,0 +1,39 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+interface Shape {
+    + {abstract} accept(v: Visitor)
+}
+Shape -left-o Visitor
+class Dot {
+    + accept(v: Visitor)
+}
+Dot -up-|> Shape
+class Circle{
+    + accept(v: Visitor)
+}
+Circle -up-|> Shape
+class Rectangle{
+   + accept(v: Visitor)
+}
+Rectangle -up-|> Shape
+
+interface Visitor {
+    + {abstract} visit(dot: Dot): void
+    + {abstract} visit(circle: Circle): void
+    + {abstract} visit(rectangle: Rectangle): void
+}
+class XmlExportVisitor {
+    + visit(dot: Dot): void
+    + visit(circle: Circle): void
+    + visit(rectangle: Rectangle): void
+}
+XmlExportVisitor .up.|> Visitor
+note bottom of XmlExportVisitor
+    实现将元素导出 XML 格式的功能
+end note
+
+class Client
+Client -right-> XmlExportVisitor
+Client -down-> Shape
+@enduml

@@ -5560,5 +5560,284 @@ public class ArrayList<E> extends AbstractList<E>
 
 注意：当我们进行 Java 开发时**如果需要使用迭代器模式**，只需要让我们的聚合类实现 `java.lang.Iterable` 接口并实现其中的 `iterator()` 方法返回一个 `java.util.Iterator` 接口实现类就好了
 
+### 访问者模式
 
+#### 简介
+
+> 最复杂的设计模式，并且使用频率不高，《设计模式》的作者评价为：大多情况下，你不需要使用访问者模式，但是一旦需要使用它时，那就真的需要使用了。
+
+- 访问者模式是一种将数据操作和数据结构分离的设计模式
+- 它可以使你可以在不改变各元素类的前提下定义作用于这些元素的新操作
+
+#### 结构
+
+- 抽象访问者(Visitor)角色：定义了对每一个**具体元素**访问的方法，方法参数就是对应的具体元素，**方法个数要求于具体元素个数**是一样的
+- 具体访问者(Concrete Visitor)角色：实现了对每一个具体元素访问的方法，给出了每一个元素类访问时所产生的具体行为
+- 抽象元素角色：除了业务逻辑方法之外还需要定义一个接收访问者的方法(`accept()`)，代表每一个具体元素可以被访问者访问
+- 具体元素角色：提供接受访问方法(`accept()`)的具体实现
+- 对象结构角色：对象结构(就是一个具有**容器性质/复合对象特性**的类)，它会含有一组元素，并且可以迭代这些元素，供访问者访问
+
+#### 代码实现
+
+> 问题描述
+
+一个地图系统有许多节点(城市/工业区/旅游景点等)，现在有一个新功能，就是将全部节点导出到一个 XML 中，两种方法：
+
+1. 为每一个节点类添加一个导出 XML 函数(虽然都是节点，但不同节点的结构和数据可能不同)
+2. 使用访问者模式
+
+> UML 类图：使用图形代替地图节点
+
+ ![image-20220516221120746](README.assets/image-20220516221120746.png)
+
+> 代码实现
+
+1. 创建 Shape - 抽象元素角色
+
+   ```java
+   /**
+    * 抽象元素类
+    */
+   public interface Shape {
+   
+       /**
+        * 定义接受访问者的方法
+        * @param v
+        */
+       void accept(Visitor v);
+   
+   }
+   ```
+
+2. 创建 Circle/Rectangle/Dot - 具体元素角色
+
+   ```java
+   public class Circle implements Shape {
+   
+       // 内部应该还包含又原本的业务处理逻辑
+   
+       @Override
+       public void accept(Visitor v) {
+           v.visit(this);
+       }
+   }
+   ```
+
+   ```java
+   public class Dot implements Shape{
+       @Override
+       public void accept(Visitor v) {
+           v.visit(this);
+       }
+   }
+   ```
+
+   ```java
+   public class Rectangle implements Shape{
+       @Override
+       public void accept(Visitor v) {
+           v.visit(this);
+       }
+   }
+   ```
+
+3. 创建 Visitor - 抽象访问者
+
+   ```java
+   public interface Visitor {
+   
+       // 定义扩展具体角色的方法定义
+       void visit(Dot dot);
+   
+       void visit(Circle circle);
+   
+       void visit(Rectangle rectangle);
+   }
+   ```
+
+4. 创建 XmlExportVisitor - 具体访问者
+
+   ```java
+   /**
+    * 具体访问者 - 扩展具体元素类的方法
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 22:15
+    */
+   public class XmlExportVisitor implements Visitor {
+   
+       /**
+        * 批量导出数据集合
+        * @param shapeList
+        */
+       public void export(List<Shape> shapeList) {
+           shapeList.forEach(shape -> shape.accept(this));
+       }
+   
+       @Override
+       public void visit(Dot dot) {
+           System.out.println("将 dot 转成 xml");
+       }
+   
+       @Override
+       public void visit(Circle circle) {
+           System.out.println("将 circle 转成 xml");
+       }
+   
+       @Override
+       public void visit(Rectangle rectangle) {
+           System.out.println("将 rectangle 转成 xml");
+       }
+   }
+   ```
+
+5. 使用 - Client 就是类似于**对象结构角色**
+
+   ```java
+   private static List<Shape> shapeList = new ArrayList<>();
+   
+   static {
+       shapeList.add(new Dot());
+       shapeList.add(new Rectangle());
+       shapeList.add(new Circle());
+   }
+   
+   public static void main(String[] args) {
+       XmlExportVisitor xmlExportVisitor = new XmlExportVisitor();
+       xmlExportVisitor.export(shapeList);
+   }
+   ```
+
+#### 优缺点
+
+- 优点
+  1. 扩展性好：在不修改对象结构的元素的情况下，可以为**对象结构中的元素添加新的功能**
+  2. 复用性好：通过访问者来定义整个对象结构通用的功能，从而提高复用程度
+  3. 分离无关行为：通过访问者来分离无关的行为，把相关的行为封装到一起，构成一个访问者，单一职责
+- 缺点
+  1. 对象结构变化很困难：增加一个新的具体元素类，都要在每一个具体访问类中增加相应的具体操作
+  2. 违反了依赖倒置原则：访问者依赖的具体类，而不是抽象类
+
+#### 使用场景
+
+- 对象结构稳定，但其操作算法经常变化的程序
+- 对象结构中的对象需要提多种不同且不相关的操作，可以避免让这些操作的变化影响对象的结构
+
+#### 扩展 - 双分派
+
+> 动态绑定&静态绑定
+
+- 动态绑定：程序在执行期间判断引用对象的实际类型，根据其实际的类型调用相应的方法
+
+  ```java
+  public class DynamicBound {
+      public static void main(String[] args) {
+          Person person = new Man() ;
+          person.say(); // Hey Man
+      }
+  }
+  
+  class Person{
+      public void say(){} ;
+  }
+  
+  class Man extends Person{
+      public void say(){
+          System.out.println("Hey Man");
+      }
+  }
+  ```
+
+- 静态绑定: 在编译器就确定了执行的方法，方法的重载就是静态绑定的，重载时，执行哪一个方法在编译器就已经确定下来的
+
+  ```java
+  public class StaticBound {
+      public static void main(String[] args) {
+          OutputName out = new OutputName() ;
+          Person p = new Person() ;
+          Person man = new Man() ;
+          Person woman = new Woman() ;
+          out.print(p);		// person
+          out.print(man);		// person
+          out.print(woman);	// person
+      }
+  }
+  
+  
+  class Person{
+  }
+  
+  class Man extends Person{
+  
+  }
+  class Woman extends Person{
+  
+  }
+  
+  class OutputName{
+      void print(Person p){
+          System.out.println("person");
+      }
+      void print(Man m){
+          System.out.println("man");
+      }
+      void print(Woman w){
+          System.out.println("woman");
+      }
+  }
+  ```
+
+> 双分派
+
+- 分派：运行环境按照对象的**实际类型为其绑定对应方法体**的过程。
+
+- 双分派：根据消息接收者(方法调用方)的运行时类型 & 根据参数的运行时类型
+
+  ```java
+  class Father {
+      public void accept(Execute exe){
+          exe.method(this);// 根据参数的运行时类型
+      }
+  }
+  class Son1 extends Father{
+      @Override
+      public void accept(Execute exe){
+          exe.method(this);
+      }
+  }
+  class Son2 extends Father{
+      @Override
+      public void accept(Execute exe){
+          exe.method(this);
+      }
+  }
+  
+  class Execute {
+      public void method(Father father){
+          System.out.println("This is Father's method");
+      }
+  
+      public void method(Son1 son){
+          System.out.println("This is Son1's method");
+      }
+  
+      public void method(Son2 son){
+          System.out.println("This is Son2's method");
+      }
+  }
+  
+  public class Test {
+      public static void main(String[] args){
+          Father father = new Father();
+          Father s1 = new Son1();
+          Father s2 = new Son2();
+          Execute exe = new Execute();
+          father.accept(exe); // 根据消息接收者(方法调用方)的运行时类型
+          s1.accept(exe);
+          s2.accept(exe);
+      }
+  }
+  ```
+
+- 简单理解：重载是静态绑定，重写是动态绑定，双分派把重写放在重载之前，以实现在运行时动态判断执行那个子类的方法
 
