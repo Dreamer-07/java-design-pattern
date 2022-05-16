@@ -5336,3 +5336,229 @@ public class Observable {
 #### 使用场景
 
 - 系统中对象之间**存在复杂的引用关系**，系统结构混乱且难以理解
+
+### 迭代器模式
+
+#### 简介
+
+- 提供一个对象来顺序访问聚合对象中的一系列数据，而不是暴漏聚合对象的内部表示
+
+#### 结构
+
+- 抽象聚合角色：定义存储，添加，删除聚合元素以创建迭代器对象的接口
+- 具体聚合角色：实现抽象聚合类，返回一个**具体迭代器的实例**
+- 抽象迭代器：定义访问和遍历聚合角色的接口(`hasNext()`,`next()`等方法)
+- 具体迭代器：实现抽象迭代器接口所定义的方法，完成对具体聚合对象的遍历&访问
+
+#### 代码
+
+> 问题描述 
+
+ ![image-20220516162400722](README.assets/image-20220516162400722.png)
+
+> UML 类图
+
+ ![image-20220516192504931](README.assets/image-20220516192504931.png)
+
+> 代码实现
+
+1. 创建 Student - 需要聚合&遍历的对象
+
+   ```java
+   public class Student {
+   
+       private String name;
+   
+       private String id;
+   
+       public Student() {
+       }
+   
+       public Student(String name, String id) {
+           this.name = name;
+           this.id = id;
+       }
+   
+       public String getName() {
+           return name;
+       }
+   
+       public void setName(String name) {
+           this.name = name;
+       }
+   
+       public String getId() {
+           return id;
+       }
+   
+       public void setId(String id) {
+           this.id = id;
+       }
+   }
+   ```
+
+2. 创建Aggregation - 抽象聚合类
+
+   ```java
+   /**
+    * 抽象聚合类
+    * @param <T>
+    */
+   public interface Aggregation<T> {
+   
+       void add(T t);
+   
+       void remove(T t);
+   
+       Iterator<T> getIterator();
+   
+   }
+   ```
+
+3. 创建StudentAggregation - 具体聚合类
+
+   ```java
+   /**
+    * 具体聚合类
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 19:18
+    */
+   public class StudentAggregation implements Aggregation<Student> {
+       private final List<Student> studentList;
+       private final Iterator<Student> studentIterator;
+   
+       public StudentAggregation() {
+           studentList = new ArrayList<>();
+           studentIterator = new StudentIterator(studentList);
+       }
+   
+       @Override
+       public void add(Student student) {
+           studentList.add(student);
+       }
+   
+       @Override
+       public void remove(Student student) {
+           studentList.remove(student);
+       }
+   
+       @Override
+       public Iterator<Student> getIterator() {
+           return studentIterator;
+       }
+   }
+   ```
+
+4. 创建抽象迭代器 - Iterator
+
+   ```java
+   /**
+    * 抽象迭代器
+    * @param <T>
+    */
+   public interface Iterator<T> {
+   
+       boolean hasNext();
+   
+       T next();
+   
+   }
+   ```
+
+5. 创建具体迭代器 - StudentIterator
+
+   ```java
+   /**
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 19:22
+    */
+   public class StudentIterator implements Iterator<Student> {
+       private final List<Student> studentList;
+       private int position;
+   
+       public StudentIterator(List<Student> studentList) {
+           this.studentList = studentList;
+           position = 0;
+       }
+   
+       @Override
+       public boolean hasNext() {
+           return position < studentList.size();
+       }
+   
+       @Override
+       public Student next() {
+           return studentList.get(position++);
+       }
+   }
+   ```
+
+6. 使用
+
+   ```java
+   public static void main(String[] args) {
+       StudentAggregation studentAggregation = new StudentAggregation();
+       studentAggregation.add(new Student("张三", "001"));
+       studentAggregation.add(new Student("张三", "002"));
+       studentAggregation.add(new Student("张三", "003"));
+   
+       Iterator<Student> studentIterator = studentAggregation.getIterator();
+       while (studentIterator.hasNext()) {
+           System.out.println(studentIterator.next().getId());
+       }
+   }
+   ```
+
+#### 优缺点
+
+- 优点
+  - 支持以不同的方式遍历一个聚合对象，在同一个聚合对象上可以定义多种遍历方式；只需要用一个不同的迭代器来替代原有迭代器即可改变遍历算法
+  - 简化了聚合类，由于引入了迭代器，在原有的**聚合对象中不需要再自行提供数据遍历**等方法
+  - 在迭代器模式中，由于引入了抽象层，增加新的聚合类/迭代器类时很方便，无需修改原有代码，满足"开闭原则"要求
+- 缺点：增加了类的个数，在一定程序上增加了系统的复杂性
+
+#### 使用场景
+
+- 当需要为聚合对象提供多种遍历方式时
+- 当需要为遍历不同的聚合结构提供一个统一的接口使
+- 当访问一个聚合对象的内容而无需暴漏其内部细节的表示时
+
+#### JDK 源码
+
+`ArrayList`
+
+```java
+public class ArrayList<E> extends AbstractList<E>
+    implements List<E>, RandomAccess, Cloneable, java.io.Serializable
+{
+    // 返回迭代器
+    public Iterator<E> iterator() {
+        return new Itr();
+    }
+    // 迭代器，定义了聚合对象的遍历和访问
+    private class Itr implements Iterator<E> {
+        int cursor;       // index of next element to return
+        int lastRet = -1; // index of last element returned; -1 if no such
+        int expectedModCount = modCount;
+
+        Itr() {}
+
+        public boolean hasNext() {
+            return cursor != size;
+        }
+
+        @SuppressWarnings("unchecked")
+        public E next() {
+        }
+		...
+    }
+    ...
+}
+```
+
+注意：当我们进行 Java 开发时**如果需要使用迭代器模式**，只需要让我们的聚合类实现 `java.lang.Iterable` 接口并实现其中的 `iterator()` 方法返回一个 `java.util.Iterator` 接口实现类就好了
+
+
+

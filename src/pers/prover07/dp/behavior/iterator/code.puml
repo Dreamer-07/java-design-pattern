@@ -1,0 +1,37 @@
+@startuml
+'https://plantuml.com/class-diagram
+interface Iterator<T> {
+    + {abstract} hasNext(): boolean
+    + {abstract} next(): T
+}
+interface Aggregation<T> {
+    + {abstract} add(obj: T): void
+    + {abstract} remove(obj: T): void
+    + {abstract} getIterator(): Iterator<T>
+}
+Aggregation -right-> Iterator
+class Student {
+    - name: String
+    - id: String
+}
+
+class StudentIterator {
+    - studentList: List<Student>
+    - position: int
+    + StudentIterator(studentList: List<Student>)
+    + hasNext(): boolean
+    + next(): Student
+}
+StudentIterator .up.|> Iterator
+StudentIterator -down-> Student
+
+class StudentAggregation {
+    + {abstract} add(student: Student): void
+    + {abstract} remove(student: Student): void
+    + {abstract} getIterator(): StudentIterator
+}
+StudentAggregation .up.|> Aggregation
+StudentAggregation -down-> Student
+
+
+@enduml
