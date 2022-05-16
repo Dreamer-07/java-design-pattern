@@ -4543,5 +4543,198 @@ public static void main(String[] args) {
 }
 ```
 
+### 责任链模式
 
+#### 简介
 
+又名职责链模式，为了避免请求发送者与多个请求处理者耦合在一起，将所有的请求处理者通过**前一对象记住其下一个对象的引用**而连成一条链；当有请求发生时，可将请求沿着这条链传递，直到有对象处理它为止
+
+#### 结构
+
+- 抽象处理角色：定义一个处理请求的接口(抽象类)，包含抽象的处理方法和一个后继连接
+- 具体处理角色：实现**抽象处理角色**方法，判断能否处理本次请求，如果可以则处理请求否则将请求转给它的**后继者**
+- 客户类角色：创建处理链，并向连头的具体处理器者对象发送请求(并不关系细节处理和请求的传递过程 )
+
+#### 代码
+
+> 问题描述
+
+![image-20220516103205068](README.assets/image-20220516103205068.png)
+
+> UML 类图
+
+ ![image-20220516105544572](README.assets/image-20220516105544572.png)
+
+> 代码实现
+
+1. 创建 LeaveRequest - 业务类
+
+   ```java
+   /**
+    * 职责链模式 - 业务类
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 10:56
+    */
+   public class LeaveRequest {
+   
+       private String name;
+       private int num;
+       private String content;
+   
+       public LeaveRequest(String name, int num, String content) {
+           this.name = name;
+           this.num = num;
+           this.content = content;
+       }
+   
+       public String getName() {
+           return name;
+       }
+   
+       public int getNum() {
+           return num;
+       }
+   
+       public String getContent() {
+           return content;
+       }
+   }
+   ```
+
+2. 创建 Handler - 抽象处理角色
+
+   ```java
+   /**
+    * 职责链模式 - 抽象处理角色
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 10:59
+    */
+   public abstract class Handler {
+   
+       protected final static int NUM_ONE = 1;
+       protected final static int NUM_TWO = 3;
+       protected final static int NUM_THREE = 7;
+   
+       private Handler next;
+       private int numEnd;
+   
+       public Handler(int numEnd) {
+           this.numEnd = numEnd;
+       }
+   
+       public void setNext(Handler next) {
+           this.next = next;
+       }
+   
+       abstract void handlerReq(LeaveRequest leaveRequest);
+   
+       public final void submit(LeaveRequest leaveRequest) {
+           if (leaveRequest.getNum() > this.numEnd) {
+               // 超过当前角色的权限
+               this.next.submit(leaveRequest);
+           } else {
+               this.handlerReq(leaveRequest);
+           }
+       }
+   }
+   ```
+
+3. 创建具体处理角色
+
+   ```java
+   public class GroupLeader extends Handler{
+       public GroupLeader() {
+           super(NUM_ONE);
+       }
+   
+       @Override
+       void handlerReq(LeaveRequest leaveRequest) {
+           System.out.printf("请假人:%s;请假天数:%s;请假理由:%s%n", leaveRequest.getName(), leaveRequest.getNum(), leaveRequest.getContent());
+           System.out.println("审批人:小组长");
+       }
+   }
+   ```
+
+   ```java
+   public class Manager extends Handler {
+       public Manager() {
+           super(NUM_TWO);
+       }
+   
+       @Override
+       void handlerReq(LeaveRequest leaveRequest) {
+           System.out.printf("请假人:%s;请假天数:%s;请假理由:%s%n", leaveRequest.getName(), leaveRequest.getNum(), leaveRequest.getContent());
+           System.out.println("审批人:部门经理");
+       }
+   }
+   ```
+
+   ```java
+   public class GeneralManager extends Handler {
+       public GeneralManager() {
+           super(NUM_THREE);
+       }
+   
+       @Override
+       void handlerReq(LeaveRequest leaveRequest) {
+           System.out.printf("请假人:%s;请假天数:%s;请假理由:%s%n", leaveRequest.getName(), leaveRequest.getNum(), leaveRequest.getContent());
+           System.out.println("审批人:总经理");
+       }
+   }
+   ```
+
+4. 使用
+
+   ```java
+   public static void main(String[] args) {
+       // 创建职责链
+       GroupLeader groupLeader = new GroupLeader();
+       Manager manager = new Manager();
+       groupLeader.setNext(manager);
+       manager.setNext(new GeneralManager());
+       // 提交请求
+       LeaveRequest leaveRequest = new LeaveRequest("jack", 2, "身体不舒服");
+       groupLeader.submit(leaveRequest);
+   }
+   ```
+
+#### 优缺点
+
+- 优点
+  1. 降低了对象之间的耦合度(请求接收者&发送者)
+  2. 增强了系统的可扩展性(满足开闭原则)
+  3. 增强了对象指派职责的灵活性(可以修改工作流程)
+  4. 简化了对象之间的连接(一个对象只需要保持一个指向其后继者的引用，避免在客户端需要使用过多的 `if...else` 语句)
+  5. 责任分担(每个类只需要处理自己该处理的工作，不能处理的传递下一个对象完成，符合类的单一职责原则)
+- 缺点
+  1. 不能保证每个请求一定被处理，可能到职责链末端都不能处理
+  2. 对比较长的职责链，请求的处理可能涉及多个处理对象，系统性能将受到一定影响
+  3. 职责链建立的合理性需要靠客户端保证，增加了客户端的复杂性，可能会由于职责链的错误设置而导致系统出错(例如循环调用)
+
+#### Tomcat源码
+
+`Filter & FilterChain` 中就基于责任链模式实现了过滤器链
+
+```java
+// 抽象处理角色
+public interface Filter {
+    void init(FilterConfig var1) throws ServletException;
+    //熟悉的doFilter(), 熟悉的3个参数request, reponse, filterChain.
+    void doFilter(ServletRequest var1, ServletResponse var2, FilterChain var3) throws IOException, ServletException;
+
+    void destroy();
+}
+```
+
+```java
+// 客户类角色，负责定义过滤器链
+public interface FilterChain {
+    void doFilter(ServletRequest var1, ServletResponse var2) throws IOException, ServletException;
+}
+```
+
+网上的大佬参考源码后做了一个简单版本的过滤机制: https://www.cnblogs.com/TheGCC/p/14172799.html
+
+SpringSecurity 也基于责任链实现的过滤器：TODO(SpringSecurity 源码分析)

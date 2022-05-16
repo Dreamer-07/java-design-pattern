@@ -7,8 +7,8 @@ class Receiver {
 note top of Receiver
     接收者
 end note
-interface Command {
-    - action: Action
+abstract Command {
+    - receiver: Receiver
     + setAction(action: Action): void
     + {abstract} execute(): void
 }

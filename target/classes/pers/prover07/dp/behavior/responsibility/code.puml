@@ -1,0 +1,35 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+
+class LeaveRequest {
+    - name: String
+    - num: int
+    - content: String
+}
+
+abstract class Handler {
+    # NUM_ONE = 1: int
+    # NUM_TWO = 5: int
+    # NUM_THREE = 7: int
+    - next: Handler
+    - num_end: int
+    + {abstract} handlerReq(leaveRequest: LeaveRequest): void
+    + final submit(leaveRequest: LeaveRequest): void
+}
+Handler -right-> LeaveRequest
+class GroupLeader {
+    + handlerReq(leaveRequest: LeaveRequest): void
+}
+GroupLeader -up-|> Handler
+class Manager{
+    + handlerReq(leaveRequest: LeaveRequest): void
+}
+Manager -up-|> Handler
+class GeneralManger{
+    + handlerReq(leaveRequest: LeaveRequest): void
+}
+GeneralManger -up-|> Handler
+
+
+@enduml
