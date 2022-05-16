@@ -1,5 +1,7 @@
 #   设计模式
 
+> 大佬：https://refactoringguru.cn/design-patterns
+
 ## 简介
 
 - 软件工程中，设计模式是对**软件设计中普遍存在(反复出现)的问题**，所提出的**解决方案**
@@ -4303,4 +4305,243 @@ public interface Comparator<T> {
 ```java
 public static <T> void sort(T[] a, Comparator<? super T> c) {
 ```
+
+### 命令模式
+
+#### 简介
+
+将一个请求封装为一个对象，使**发出请求和执行请求的责任分割开**，让两者通过**命令对象**进行沟通
+
+#### 结构
+
+- 抽象命令角色：定义命令的接口，声明执行的方法
+- 具体命令角色：具体的命令，实现命令接口；通常会持有**接收者**，并调用接收者的功能来完成命令要执行的操作
+- 实现者/接收者角色：接收者，真正执行命令的对象，任何类都可能成为一个接收者，只要它能够实现命令要求的相应功能
+- 调用者/请求者角色：要求命令对象执行请求，通常会持有**命令角色**，可以持有很多命令角色，是客户端发送命令的入口
+
+#### 代码
+
+> 问题描述
+
+在我们进行软件设计时，一般会将软件进行分层，一层负责用户图像界面，一层负责业务逻辑；
+
+通过 GUI 对象传递一些参数来调用一个业务逻辑对象，这个过程通常被描述为**一个对象发送请求给另一个对象**
+
+ ![GUI 层可以直接访问业务逻辑层](README.assets/solution1-zh.png)
+
+命令模式建议 GUI 对象**不直接提交请求**，而是将请求的细节(调用的对象，方法名称，参数列表)抽取出来组成命令类，由该类来负责触发请求
+
+ ![通过命令访问业务逻辑层。](README.assets/solution2-zh.png)
+
+命令对象负责连接不同的业务逻辑对象
+
+> UML 类图
+
+ ![image-20220516094803750](README.assets/image-20220516094803750.png)
+
+> 代码实现
+
+1. 创建 Receiver - 接收者
+
+   ```java
+   /**
+    * 命令模式 - 接收者
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 9:39
+    */
+   public class Receiver {
+   
+       public void action() {
+           System.out.println("receiver...");
+       }
+   
+   }
+   ```
+
+2. 创建抽象命令类
+
+   ```java
+   /**
+    * 命令模式 - 抽象命令类
+    */
+   public abstract class Command {
+   
+       public Receiver receiver;
+   
+       public void setReceiver(Receiver receiver) {
+           this.receiver = receiver;
+       }
+   
+       abstract void execute();
+   }
+   ```
+
+3. 创建具体命令类
+
+   ```java
+   /**
+    * 策略模式 - 具体命令类
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 9:41
+    */
+   public class CommandA extends Command{
+   
+       public CommandA() {
+           this.receiver = new Receiver();
+       }
+   
+       @Override
+       void execute() {
+           System.out.println("CommandA...");
+           this.receiver.action();
+       }
+   }
+   ```
+
+   ```java
+   /**
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 9:41
+    */
+   public class CommandB extends Command{
+   
+       public CommandB() {
+           this.receiver = new Receiver();
+       }
+   
+       @Override
+       void execute() {
+           System.out.println("CommandB...");
+           this.receiver.action();
+       }
+   }
+   ```
+
+4. 创建 GUI - 调用者
+
+   ```java
+   /**
+    * 命令模式 - 调用者
+    * @author 小丶木曾义仲丶哈牛柚子露丶蛋卷
+    * @version 1.0
+    * @date 2022/5/16 9:42
+    */
+   public class GUI {
+   
+       private Command command;
+   
+       public GUI() {
+       }
+   
+       public GUI(Command command) {
+           this.command = command;
+       }
+   
+       public void setCommand(Command command) {
+           this.command = command;
+       }
+   
+       public void call() {
+           command.execute();
+       }
+   }
+   ```
+
+5. 使用
+
+   ```java
+   public static void main(String[] args) {
+       GUI gui = new GUI();
+       gui.setCommand(new CommandA());
+       gui.call();
+   }
+   ```
+
+#### 优缺点
+
+- 优点
+  - 降低系统的耦合度，命令模式能将**调用操作的对象**和**实现该操作的对象**解耦
+  - 增加或删除命令非常方便，采用命令模式增加与删除不会影响其他类，满足"开闭原则"，对扩展比较灵活
+  - 可以与**组合模式**结合，将多个命令装配成一个组合命令，即**宏命令**
+  - 方便实现 Undo 和 Redo 操作(与**备忘录模式**结合，实现命令的撤销与恢复)
+- 缺点
+  - 可能会导致系统有过多的具体命令类
+  - 系统结构更加复杂
+
+#### 使用场景
+
+- 系统需要将**请求调用者**和**请求接收者**解耦，使得调用者和接收者不直接交互
+- 系统需要在不同的时间指定请求，将请求排队和执行请求
+- 系统需要支持命令的撤销(Undo)和恢复(Redo)操作
+
+#### JDK 源码
+
+`Runable` 是一个典型命令模式:
+
+```java
+//命令接口(抽象命令角色)
+public interface Runnable {
+    public abstract void run();
+}
+```
+
+Thread 就是调用者,其中 `start()` 就是执行命令的方法，里面会调用一个 `native start0()` 方法去抢占线程
+
+```java
+public class Thread implements Runnable {
+    private Runnable target;
+
+    public synchronized void start() {
+        if (threadStatus != 0)
+            throw new IllegalThreadStateException();
+
+        group.add(this);
+
+        boolean started = false;
+        try {
+            start0();
+            started = true;
+        } finally {
+            try {
+                if (!started) {
+                    group.threadStartFailed(this);
+                }
+            } catch (Throwable ignore) {
+            }
+        }
+    }
+    
+    // 开启
+    private native void start0();
+}
+```
+
+当 `start0()` 方法成功抢占线程后就会执行 `target.run()` 方法
+
+```java
+// 具体命令
+public class T implements Runnable {
+    @Override
+    public void run() {
+        // 可以自己写个 receiver 然后在这调用它
+        LazySingleton lazySingleton = LazySingleton.getInstance();
+        System.out.println(Thread.currentThread().getName() + " : " + lazySingleton);
+    }
+}
+```
+
+```java
+public static void main(String[] args) {
+    Thread t1 = new Thread(new T());
+    Thread t2 = new Thread(new T());
+    t1.start();
+    t2.start();
+    System.out.println("Program End");
+}
+```
+
+
 

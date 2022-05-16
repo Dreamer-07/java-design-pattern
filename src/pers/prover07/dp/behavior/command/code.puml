@@ -1,0 +1,32 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class Receiver {
+    + action(): void
+}
+note top of Receiver
+    接收者
+end note
+abstract Command {
+    - receiver: Receiver
+    + setAction(action: Action): void
+    + {abstract} execute(): void
+}
+Command -right-o Receiver
+class Command1
+Command1 .up.|> Command
+class Command2
+Command2 .up.|> Command
+class GUI {
+    - command: Command
+    + GUI(command: Command)
+    + setCommand(command: Command): void
+    + call()
+}
+note top of GUI
+    调用者
+end note
+GUI -o Command
+
+
+@enduml
